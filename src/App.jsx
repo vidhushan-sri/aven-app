@@ -113,21 +113,15 @@ const Card = ({ children, style, className = "" }) => (
   <div className={className} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, ...style }}>{children}</div>
 );
 
-const StatCard = ({ label, value, change, sparkData, bg, sparkColor, icon }) => (
-  <div style={{ background: bg, borderRadius: 14, padding: "16px 20px", flex: 1, minWidth: 180, position: "relative", overflow: "hidden" }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-      <div style={{ opacity: .7, fontSize: 22 }}>{icon}</div>
-      {change && <span style={{ fontSize: 11, fontWeight: 600, color: change > 0 ? C.accept : C.reject, display: "flex", alignItems: "center", gap: 2 }}>
-        {change > 0 ? "↗" : "↘"} {change > 0 ? "+" : ""}{change}%
-      </span>}
-    </div>
-    <div style={{ marginTop: 10 }}>
-      <div style={{ fontSize: 12, color: "rgba(0,0,0,.5)", fontWeight: 500 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: 2 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-.02em" }}>{value}</div>
-        <Spark data={sparkData} color={sparkColor} />
+const StatCard = ({ label, value, change, bg }) => (
+  <div style={{ background: bg, borderRadius: 14, padding: "20px 24px", flex: 1, minWidth: 180 }}>
+    <div style={{ fontSize: 13, color: "rgba(0,0,0,.6)", fontWeight: 500, marginBottom: 8 }}>{label}</div>
+    <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-.02em", marginBottom: 6 }}>{value}</div>
+    {change !== undefined && (
+      <div style={{ fontSize: 12, fontWeight: 600, color: change > 0 ? C.accept : C.reject }}>
+        {change > 0 ? "↗" : "↘"} {change > 0 ? "+" : ""}{change}% from last period
       </div>
-    </div>
+    )}
   </div>
 );
 
@@ -368,10 +362,10 @@ const Dashboard = ({ leads }) => {
 
       {/* Stat Cards — pastel backgrounds with sparklines */}
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <StatCard label="Validated" value={fmt(filtered.length)} change={2.6} bg={C.blue} sparkColor={C.blueDark} sparkData={[12, 28, 42, 58, 71, filtered.length]} icon="🛡️" />
-        <StatCard label="Accepted" value={fmt(acc.length)} change={parseFloat(pct(acc.length, filtered.length)) > 60 ? 1.2 : -0.8} bg={C.purple} sparkColor={C.purpleDark} sparkData={[8, 20, 32, 44, 55, acc.length]} icon="✅" />
-        <StatCard label="Avg Score" value={avg} change={3.1} bg={C.amber} sparkColor={C.amberDark} sparkData={[62, 68, 72, 76, 79, parseFloat(avg) || 78]} icon="📊" />
-        <StatCard label="Disputed" value={$(rej.length * 10)} change={-1.4} bg={C.rose} sparkColor={C.roseDark} sparkData={[4, 8, 14, 18, 22, rej.length]} icon="⚖️" />
+        <StatCard label="Validated" value={fmt(filtered.length)} change={2.6} bg={C.blue} />
+        <StatCard label="Accepted" value={`${fmt(acc.length)} (${pct(acc.length, filtered.length)}%)`} change={1.2} bg={C.purple} />
+        <StatCard label="Avg Score" value={avg} change={3.1} bg={C.amber} />
+        <StatCard label="Disputed" value={$(rej.length * 10)} change={-1.4} bg={C.rose} />
       </div>
 
       {/* Big Charts Row */}
@@ -524,13 +518,20 @@ const Validate = ({ leads, setLeads }) => {
           scores: r.scores,
           totalScore: r.totalScore,
           status: r.decision === "ACCEPT" ? "accepted" : "rejected",
-          acceptReasons: r.decision === "ACCEPT" ? [{ cat: "Score Met Threshold", detail: "Total score exceeded acceptance threshold", score: r.totalScore }] : null,
-          rejectionReason: r.decision === "REJECT" ? "Score below acceptance threshold" : null,
-          validatedAt: new Date().toISOString(),
-          cost: 10, proof: r.proof || {},
+          decision: r.decision,
+          reasoning: r.reasoning,
+          agentSignature: r.agentSignature,
+          teeProof: r.teeProof,
+          jobTitle: r.lead?.title || "",
+          companySize: parsed[i]?.employeeCount || 0,
+          acceptReasons: r.decision === "ACCEPT" ? [{ cat: "Met Threshold", detail: "Score exceeded threshold", score: r.totalScore }] : null,
+          rejectionReason: r.decision === "REJECT" ? (r.reasoning?.overall || "Below threshold") : null,
+          validatedAt: r.timestamp || new Date().toISOString(),
+          rejectedAt: r.decision === "REJECT" ? (r.timestamp || new Date().toISOString()) : null,
+          cost: 10,
           vendor: parsed[i]?.vendor || "Direct", selected: false, pushed: false,
-          eigenVerified: !r.proof?.simulated,
-          phone: parsed[i]?.phone || "", linkedIn: parsed[i]?.linkedIn || "",
+          eigenVerified: r.teeProof?.runningInTEE || false,
+          phone: parsed[i]?.phone || "", linkedin: parsed[i]?.linkedIn || "",
           employeeCount: parsed[i]?.employeeCount || 0, industry: parsed[i]?.industry || "",
         }));
         setLeads(p => [...p, ...newLeads]);
@@ -560,17 +561,22 @@ const Validate = ({ leads, setLeads }) => {
       const nl = {
         id: `AV-${String(leads.length + 1).padStart(4, "0")}`,
         firstName: form.firstName, lastName: form.lastName, email: form.email,
-        company: form.company, title: form.title, industry: form.industry,
-        employeeCount: parseInt(form.employeeCount) || 1000,
+        company: form.company, title: form.title, jobTitle: form.title, industry: form.industry,
+        employeeCount: parseInt(form.employeeCount) || 1000, companySize: parseInt(form.employeeCount) || 1000,
         scores: result.scores, totalScore: result.totalScore,
         status: result.decision === "ACCEPT" ? "accepted" : "rejected",
-        acceptReasons: result.decision === "ACCEPT" ? [{ cat: "DM", detail: result.reasoning?.dm || "Verified", score: result.scores?.dm || 0 }, { cat: "Budget", detail: result.reasoning?.budget || "Verified", score: result.scores?.budget || 0 }] : null,
-        rejectionReason: result.decision === "REJECT" ? (result.reasoning?.dm || "Below threshold") : null,
-        validatedAt: result.meta?.timestamp || new Date().toISOString(),
-        cost: 10, proof: result.proof || {},
+        decision: result.decision,
+        reasoning: result.reasoning,
+        agentSignature: result.agentSignature,
+        teeProof: result.teeProof,
+        acceptReasons: result.decision === "ACCEPT" ? [{ cat: "DM", detail: result.reasoning?.aiDecisionMaker || "Verified", score: result.scores?.aiDecisionMaker || 0 }] : null,
+        rejectionReason: result.decision === "REJECT" ? (result.reasoning?.overall || "Below threshold") : null,
+        validatedAt: result.timestamp || new Date().toISOString(),
+        rejectedAt: result.decision === "REJECT" ? (result.timestamp || new Date().toISOString()) : null,
+        cost: 10,
         vendor: "Direct", selected: false, pushed: false,
-        eigenVerified: !result.proof?.eigenProof?.simulated,
-        phone: "", linkedIn: "",
+        eigenVerified: result.teeProof?.runningInTEE || false,
+        phone: "", linkedin: "",
       };
       setLeads(p => [...p, nl]); setSingleResult(nl);
     } else {
@@ -882,83 +888,19 @@ const Vendors = ({ leads }) => {
 // LEAD DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════════════
 const LeadDetail = ({ lead, onClose }) => (
-  <Modal open={!!lead} onClose={onClose} title="Lead Details" width={720}>
-    {lead && (<div style={{ maxHeight: "80vh", overflowY: "auto" }}>
+  <Modal open={!!lead} onClose={onClose} title="Lead Details" width={620}>
+    {lead && (<div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
-        <div><div style={{ fontSize: 18, fontWeight: 700 }}>{lead.firstName} {lead.lastName}</div><div style={{ fontSize: 12, color: C.text2 }}>{lead.jobTitle || lead.title} at {lead.company}</div></div>
-        <Badge color={lead.decision === "ACCEPT" || lead.status === "accepted" ? C.accept : C.reject}>{lead.decision || lead.status} — {lead.totalScore || 0}/100</Badge>
+        <div><div style={{ fontSize: 18, fontWeight: 700 }}>{lead.firstName} {lead.lastName}</div><div style={{ fontSize: 12, color: C.text2 }}>{lead.title} at {lead.company}</div></div>
+        <Badge color={lead.status === "accepted" ? C.accept : C.reject}>{lead.status} — {lead.totalScore || 0}/100</Badge>
       </div>
-      
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
-        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Industry", v: lead.industry }, { l: "Employees", v: lead.companySize || lead.employeeCount ? fmt(lead.companySize || lead.employeeCount) : "—" }, { l: "Phone", v: lead.phone || "—" }, { l: "LinkedIn", v: lead.linkedin || "—" }].map((x, i) => (
-          <div key={i} style={{ padding: 8, background: "#F9FAFB", borderRadius: 6 }}><div style={{ fontSize: 9, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11 }}>{x.v || "—"}</div></div>
+        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Industry", v: lead.industry }, { l: "Employees", v: lead.employeeCount ? fmt(lead.employeeCount) : "—" }, { l: "Vendor", v: lead.vendor }].map((x, i) => (
+          <div key={i} style={{ padding: 8, background: "#F9FAFB", borderRadius: 6 }}><div style={{ fontSize: 9, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 12 }}>{x.v || "—"}</div></div>
         ))}
       </div>
-      
-      {lead.scores && <div style={{ marginBottom: 20 }}><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
-        {Object.entries(lead.scores).map(([key, score]) => {
-          const maxScores = { email: 20, company: 15, contact: 20, icp: 20, aiDecisionMaker: 15, dm: 15, aiBudget: 10, budget: 10 };
-          const max = maxScores[key] || 20;
-          const label = key === "aiDecisionMaker" ? "AI Decision Maker" : key === "aiBudget" ? "AI Budget" : key === "icp" ? "ICP Fit" : key === "dm" ? "Decision Maker" : key.charAt(0).toUpperCase() + key.slice(1);
-          return <ScoreBar key={key} label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />;
-        })}
-      </div>}
-
-      {lead.reasoning && <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>🤖 AI Reasoning</div>
-        {Object.entries(lead.reasoning).map(([key, text]) => (
-          <div key={key} style={{ marginBottom: 10, padding: 10, background: "#F9FAFB", borderRadius: 6, fontSize: 11 }}>
-            <div style={{ fontWeight: 600, marginBottom: 4, textTransform: "capitalize", color: C.blueDark }}>{key.replace(/([A-Z])/g, ' $1').trim()}:</div>
-            <div style={{ color: C.text2, lineHeight: 1.5 }}>{text}</div>
-          </div>
-        ))}
-      </div>}
-
-      {lead.agentSignature && <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>🔒 Cryptographic Proofs</div>
-        <div style={{ padding: 12, background: "#1A1D26", borderRadius: 8, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#E8EBF0", lineHeight: 1.8, wordBreak: "break-all", maxHeight: "300px", overflowY: "auto" }}>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ color: C.greenDark }}>agentSignature:</span> {lead.agentSignature}
-          </div>
-          {lead.teeProof && (<>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ color: C.blueDark }}>platform:</span> {lead.teeProof.platform}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ color: "#F59E0B" }}>appId:</span> {lead.teeProof.appId}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ color: "#8B5CF6" }}>deterministicSeed:</span> {lead.teeProof.deterministicSeed}
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ color: "#10B981" }}>agentWallet:</span> {lead.teeProof.agentWallet}
-            </div>
-            {lead.teeProof.eigenaiProofs?.decisionMaker && (<>
-              <div style={{ marginTop: 12, marginBottom: 4, color: "#F59E0B", fontWeight: 600 }}>EigenAI Decision-Maker Proof:</div>
-              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
-                <span style={{ color: "#8B5CF6" }}>signature:</span> {lead.teeProof.eigenaiProofs.decisionMaker.signature}
-              </div>
-              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
-                <span style={{ color: "#8B5CF6" }}>fingerprint:</span> {lead.teeProof.eigenaiProofs.decisionMaker.fingerprint}
-              </div>
-              <div style={{ marginBottom: 8, paddingLeft: 8 }}>
-                <span style={{ color: "#8B5CF6" }}>id:</span> {lead.teeProof.eigenaiProofs.decisionMaker.id}
-              </div>
-            </>)}
-            {lead.teeProof.eigenaiProofs?.budgetAuthority && (<>
-              <div style={{ marginTop: 12, marginBottom: 4, color: "#F59E0B", fontWeight: 600 }}>EigenAI Budget Authority Proof:</div>
-              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
-                <span style={{ color: "#10B981" }}>signature:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.signature}
-              </div>
-              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
-                <span style={{ color: "#10B981" }}>fingerprint:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.fingerprint}
-              </div>
-              <div style={{ paddingLeft: 8 }}>
-                <span style={{ color: "#10B981" }}>id:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.id}
-              </div>
-            </>)}
-          </>)}
-        </div>
+      {lead.scores && <div><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
+        {[{ l: "Email", s: lead.scores.email, m: 20 }, { l: "Company", s: lead.scores.company, m: 15 }, { l: "Contact", s: lead.scores.contact, m: 20 }, { l: "ICP Fit", s: lead.scores.icp, m: 20 }, { l: "DM", s: lead.scores.dm, m: 15 }, { l: "Budget", s: lead.scores.budget, m: 10 }].map((x, i) => <ScoreBar key={i} label={x.l} score={x.s || 0} max={x.m} color={(x.s || 0) / x.m >= .7 ? C.accept : C.reject} />)}
       </div>}
     </div>)}
   </Modal>
