@@ -54,7 +54,7 @@ async function api(path, opts = {}) {
 
 const agentValidate = (lead) => api("/api/validate", { method: "POST", body: JSON.stringify(lead) });
 const agentBatch = (leads) => api("/api/validate/batch", { method: "POST", body: JSON.stringify({ leads }) });
-const agentStatus = () => api("/api/status");
+const agentStatus = () => api("/status");
 const agentConfig = (cfg) => api("/api/config", { method: "PUT", body: JSON.stringify(cfg) });
 const agentAudit = () => api("/api/audit");
 
