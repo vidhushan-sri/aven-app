@@ -11,10 +11,12 @@ exports.handler = async (event, context) => {
   }
 
   const AGENT_URL = 'http://104.196.63.225:3000';
-  const path = event.path.replace('/.netlify/functions/proxy', '').replace('/status', '/health');
+  const path = event.path
+    .replace('/.netlify/functions/proxy', '')
+    .replace('/api/proxy', '')
+    .replace('/status', '/health');
   const targetUrl = `${AGENT_URL}${path}`;
   
-  console.log('Event path:', event.path);
   console.log('Calling:', targetUrl);
   
   try {
@@ -24,10 +26,7 @@ exports.handler = async (event, context) => {
       body: event.httpMethod === 'POST' ? event.body : null,
     });
 
-    const text = await response.text();
-    console.log('Response:', text.substring(0, 200));
-    
-    const data = JSON.parse(text);
+    const data = await response.json();
     
     return {
       statusCode: 200,
@@ -35,11 +34,10 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(data),
     };
   } catch (error) {
-    console.log('Error:', error.message);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message, path: event.path }),
+      body: JSON.stringify({ error: error.message }),
     };
   }
 };
