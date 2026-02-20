@@ -877,23 +877,6 @@ const Vendors = ({ leads }) => {
 // ═══════════════════════════════════════════════════════════════════════
 // SETTINGS (actually calls backend /api/config)
 // ═══════════════════════════════════════════════════════════════════════
-const Settings = () => {
-  const [weights, setWeights] = useState({ email: 20, company: 15, contact: 20, icp: 20, dm: 15, budget: 10 });
-  const [threshold, setThreshold] = useState(80);
-  const [eigenPrompt, setEigenPrompt] = useState("You are a B2B lead quality validator. Analyze the provided lead data and determine if this person is a legitimate decision-maker with budget authority at a company that matches the target ICP. Score each criterion carefully. Be strict but fair.");
-  const [icp, setIcp] = useState({ minSize: "500", maxSize: "10000", industries: "SaaS, FinTech, HealthTech, DevTools", geo: "North America" });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [open, setOpen] = useState("eigen");
-
-  useEffect(() => { agentStatus().then(s => { if (s.config) { setThreshold(s.config.threshold); setWeights(s.config.weights); } }); }, []);
-
-  const save = async () => {
-    setSaving(true);
-    const result = await agentConfig({ weights, threshold, eigenPrompt, icp: { ...icp, minSize: parseInt(icp.minSize), maxSize: parseInt(icp.maxSize), industries: icp.industries.split(",").map(s => s.trim()) } });
-    setSaving(false);
-    if (!result.error) { setSaved(true); setTimeout(() => setSaved(false), 2500); }
-  };
 
   const Sec = ({ title, desc, id, children }) => (
     <Card style={{ marginBottom: 12, padding: 0 }}>
@@ -989,7 +972,6 @@ const NAV = [
   { key: "leads", label: "All Leads", icon: "users" },
   { key: "disputes", label: "Disputes", icon: "scale" },
   { key: "vendors", label: "Vendors", icon: "bar" },
-  { key: "settings", label: "Settings", icon: "gear" },
 ];
 
 export default function App() {
@@ -1037,7 +1019,6 @@ export default function App() {
         {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
         {page === "disputes" && <Disputes leads={leads} />}
         {page === "vendors" && <Vendors leads={leads} />}
-        {page === "settings" && <Settings />}
       </div>
 
       <LeadDetail lead={sel} onClose={() => setSel(null)} />
