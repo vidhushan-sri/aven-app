@@ -13,7 +13,9 @@ exports.handler = async (event, context) => {
   }
 
   const AGENT_URL = 'http://104.196.63.225:3000';
-  
+
+  console.log('Calling:', targetUrl);
+
   try {
     // Get path after /api/proxy
     const path = event.path.replace('/.netlify/functions/proxy', '').replace('/status', '/health');
