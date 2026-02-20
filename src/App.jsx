@@ -878,86 +878,87 @@ const Vendors = ({ leads }) => {
 // SETTINGS (actually calls backend /api/config)
 // ═══════════════════════════════════════════════════════════════════════
 
-  const Sec = ({ title, desc, id, children }) => (
-    <Card style={{ marginBottom: 12, padding: 0 }}>
-      <div onClick={() => setOpen(open === id ? null : id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", padding: "14px 20px" }}>
-        <div><div style={{ fontSize: 14, fontWeight: 600 }}>{title}</div><div style={{ fontSize: 11, color: C.text2, marginTop: 1 }}>{desc}</div></div>
-        <div style={{ transform: open === id ? "rotate(90deg)" : "none", transition: "transform .15s" }}><I n="chevR" s={15} c={C.text3} /></div>
-      </div>
-      {open === id && <div style={{ padding: "0 20px 20px", borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>{children}</div>}
-    </Card>
-  );
-
-  return (
-    <div className="fi">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
-        <div><h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.02em" }}>Settings</h1>
-          <p style={{ color: C.text2, marginTop: 2, fontSize: 13 }}>Configure your sovereign agent</p></div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {saved && <span style={{ fontSize: 12, color: C.accept, fontWeight: 500 }}>✓ Saved to agent</span>}
-          <Btn onClick={save} disabled={saving}>{saving ? "Saving..." : <><I n="save" s={13} c="#fff" /> Save Settings</>}</Btn>
-        </div>
-      </div>
-
-      <Sec title="EigenAI Configuration" desc="This updates the validation prompt sent to your sovereign agent backend" id="eigen">
-        <div style={{ padding: "8px 10px", background: "#F9FAFB", borderRadius: 6, fontSize: 11, color: C.text2, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-          <I n="info" s={13} c={C.text3} /> Changes here are sent to <code style={{ background: "#E5E7EB", padding: "1px 4px", borderRadius: 3 }}>PUT /api/config</code> on your agent at <code style={{ background: "#E5E7EB", padding: "1px 4px", borderRadius: 3 }}>{AGENT}</code>
-        </div>
-        <label style={{ display: "block", fontSize: 11, color: C.text2, marginBottom: 3 }}>Validation Prompt (sent to EigenAI for each lead)</label>
-        <textarea value={eigenPrompt} onChange={e => setEigenPrompt(e.target.value)} rows={4} style={{ width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 11.5, fontFamily: "'JetBrains Mono'", outline: "none", lineHeight: 1.6, background: "#F9FAFB" }} />
-      </Sec>
-
-      <Sec title="Scoring Weights" desc="How each criterion contributes to total score (100 max)" id="weights">
-        {Object.entries(weights).map(([k, v]) => (
-          <div key={k} style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <span style={{ fontSize: 12 }}>{k === "dm" ? "Decision Maker" : k === "icp" ? "ICP Fit" : k[0].toUpperCase() + k.slice(1)}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "'JetBrains Mono'" }}>{v}</span>
-            </div>
-            <input type="range" min="0" max="30" value={v} onChange={e => setWeights(p => ({ ...p, [k]: parseInt(e.target.value) }))} />
-          </div>
-        ))}
-        <div style={{ padding: "6px 10px", background: "#F9FAFB", borderRadius: 6, fontSize: 11, color: C.text2 }}>Total: <strong style={{ color: Object.values(weights).reduce((s, v) => s + v, 0) === 100 ? C.accept : C.reject }}>{Object.values(weights).reduce((s, v) => s + v, 0)}/100</strong></div>
-      </Sec>
-
-      <Sec title="Acceptance Threshold" desc="Minimum score to accept a lead" id="threshold">
-        <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <span style={{ fontSize: 40, fontWeight: 700, color: C.blueDark }}>{threshold}</span>
-          <span style={{ fontSize: 13, color: C.text2, marginLeft: 3 }}>/100</span>
-        </div>
-        <input type="range" min="50" max="95" value={threshold} onChange={e => setThreshold(parseInt(e.target.value))} />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 10, color: C.text3 }}><span>Lenient (50)</span><span>Strict (95)</span></div>
-      </Sec>
-
-      <Sec title="ICP Configuration" desc="Ideal Customer Profile parameters" id="icp">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {[{ k: "minSize", l: "Min Employees" }, { k: "maxSize", l: "Max Employees" }, { k: "industries", l: "Target Industries (comma-separated)" }, { k: "geo", l: "Geography" }].map(f => (
-            <div key={f.k}><label style={{ display: "block", fontSize: 11, color: C.text2, marginBottom: 3 }}>{f.l}</label>
-              <input value={icp[f.k]} onChange={e => setIcp(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "7px 10px", border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, outline: "none" }} /></div>
-          ))}
-        </div>
-      </Sec>
-    </div>
-  );
-};
-
 // ═══════════════════════════════════════════════════════════════════════
 // LEAD DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════════════
 const LeadDetail = ({ lead, onClose }) => (
-  <Modal open={!!lead} onClose={onClose} title="Lead Details" width={620}>
-    {lead && (<div>
+  <Modal open={!!lead} onClose={onClose} title="Lead Details" width={720}>
+    {lead && (<div style={{ maxHeight: "80vh", overflowY: "auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
-        <div><div style={{ fontSize: 18, fontWeight: 700 }}>{lead.firstName} {lead.lastName}</div><div style={{ fontSize: 12, color: C.text2 }}>{lead.title} at {lead.company}</div></div>
-        <Badge color={lead.status === "accepted" ? C.accept : C.reject}>{lead.status} — {lead.totalScore || 0}/100</Badge>
+        <div><div style={{ fontSize: 18, fontWeight: 700 }}>{lead.firstName} {lead.lastName}</div><div style={{ fontSize: 12, color: C.text2 }}>{lead.jobTitle || lead.title} at {lead.company}</div></div>
+        <Badge color={lead.decision === "ACCEPT" || lead.status === "accepted" ? C.accept : C.reject}>{lead.decision || lead.status} — {lead.totalScore || 0}/100</Badge>
       </div>
+      
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
-        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Industry", v: lead.industry }, { l: "Employees", v: lead.employeeCount ? fmt(lead.employeeCount) : "—" }, { l: "Vendor", v: lead.vendor }].map((x, i) => (
-          <div key={i} style={{ padding: 8, background: "#F9FAFB", borderRadius: 6 }}><div style={{ fontSize: 9, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 12 }}>{x.v || "—"}</div></div>
+        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Industry", v: lead.industry }, { l: "Employees", v: lead.companySize || lead.employeeCount ? fmt(lead.companySize || lead.employeeCount) : "—" }, { l: "Phone", v: lead.phone || "—" }, { l: "LinkedIn", v: lead.linkedin || "—" }].map((x, i) => (
+          <div key={i} style={{ padding: 8, background: "#F9FAFB", borderRadius: 6 }}><div style={{ fontSize: 9, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11 }}>{x.v || "—"}</div></div>
         ))}
       </div>
-      {lead.scores && <div><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
-        {[{ l: "Email", s: lead.scores.email, m: 20 }, { l: "Company", s: lead.scores.company, m: 15 }, { l: "Contact", s: lead.scores.contact, m: 20 }, { l: "ICP Fit", s: lead.scores.icp, m: 20 }, { l: "DM", s: lead.scores.dm, m: 15 }, { l: "Budget", s: lead.scores.budget, m: 10 }].map((x, i) => <ScoreBar key={i} label={x.l} score={x.s || 0} max={x.m} color={(x.s || 0) / x.m >= .7 ? C.accept : C.reject} />)}
+      
+      {lead.scores && <div style={{ marginBottom: 20 }}><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
+        {Object.entries(lead.scores).map(([key, score]) => {
+          const maxScores = { email: 20, company: 15, contact: 20, icp: 20, aiDecisionMaker: 15, dm: 15, aiBudget: 10, budget: 10 };
+          const max = maxScores[key] || 20;
+          const label = key === "aiDecisionMaker" ? "AI Decision Maker" : key === "aiBudget" ? "AI Budget" : key === "icp" ? "ICP Fit" : key === "dm" ? "Decision Maker" : key.charAt(0).toUpperCase() + key.slice(1);
+          return <ScoreBar key={key} label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />;
+        })}
+      </div>}
+
+      {lead.reasoning && <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>🤖 AI Reasoning</div>
+        {Object.entries(lead.reasoning).map(([key, text]) => (
+          <div key={key} style={{ marginBottom: 10, padding: 10, background: "#F9FAFB", borderRadius: 6, fontSize: 11 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4, textTransform: "capitalize", color: C.blueDark }}>{key.replace(/([A-Z])/g, ' $1').trim()}:</div>
+            <div style={{ color: C.text2, lineHeight: 1.5 }}>{text}</div>
+          </div>
+        ))}
+      </div>}
+
+      {lead.agentSignature && <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>🔒 Cryptographic Proofs</div>
+        <div style={{ padding: 12, background: "#1A1D26", borderRadius: 8, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#E8EBF0", lineHeight: 1.8, wordBreak: "break-all", maxHeight: "300px", overflowY: "auto" }}>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ color: C.greenDark }}>agentSignature:</span> {lead.agentSignature}
+          </div>
+          {lead.teeProof && (<>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ color: C.blueDark }}>platform:</span> {lead.teeProof.platform}
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ color: "#F59E0B" }}>appId:</span> {lead.teeProof.appId}
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ color: "#8B5CF6" }}>deterministicSeed:</span> {lead.teeProof.deterministicSeed}
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ color: "#10B981" }}>agentWallet:</span> {lead.teeProof.agentWallet}
+            </div>
+            {lead.teeProof.eigenaiProofs?.decisionMaker && (<>
+              <div style={{ marginTop: 12, marginBottom: 4, color: "#F59E0B", fontWeight: 600 }}>EigenAI Decision-Maker Proof:</div>
+              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
+                <span style={{ color: "#8B5CF6" }}>signature:</span> {lead.teeProof.eigenaiProofs.decisionMaker.signature}
+              </div>
+              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
+                <span style={{ color: "#8B5CF6" }}>fingerprint:</span> {lead.teeProof.eigenaiProofs.decisionMaker.fingerprint}
+              </div>
+              <div style={{ marginBottom: 8, paddingLeft: 8 }}>
+                <span style={{ color: "#8B5CF6" }}>id:</span> {lead.teeProof.eigenaiProofs.decisionMaker.id}
+              </div>
+            </>)}
+            {lead.teeProof.eigenaiProofs?.budgetAuthority && (<>
+              <div style={{ marginTop: 12, marginBottom: 4, color: "#F59E0B", fontWeight: 600 }}>EigenAI Budget Authority Proof:</div>
+              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
+                <span style={{ color: "#10B981" }}>signature:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.signature}
+              </div>
+              <div style={{ marginBottom: 4, paddingLeft: 8 }}>
+                <span style={{ color: "#10B981" }}>fingerprint:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.fingerprint}
+              </div>
+              <div style={{ paddingLeft: 8 }}>
+                <span style={{ color: "#10B981" }}>id:</span> {lead.teeProof.eigenaiProofs.budgetAuthority.id}
+              </div>
+            </>)}
+          </>)}
+        </div>
       </div>}
     </div>)}
   </Modal>
@@ -971,8 +972,7 @@ const NAV = [
   { key: "validate", label: "Validate", icon: "shield" },
   { key: "leads", label: "All Leads", icon: "users" },
   { key: "disputes", label: "Disputes", icon: "scale" },
-  { key: "vendors", label: "Vendors", icon: "bar" },
-];
+  { key: "vendors", label: "Vendors", icon: "bar" },];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -1018,8 +1018,7 @@ export default function App() {
         {page === "validate" && <Validate leads={leads} setLeads={setLeads} />}
         {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
         {page === "disputes" && <Disputes leads={leads} />}
-        {page === "vendors" && <Vendors leads={leads} />}
-      </div>
+        {page === "vendors" && <Vendors leads={leads} />}      </div>
 
       <LeadDetail lead={sel} onClose={() => setSel(null)} />
     </div>
