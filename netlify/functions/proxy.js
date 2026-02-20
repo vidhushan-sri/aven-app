@@ -14,6 +14,9 @@ exports.handler = async (event, context) => {
   const path = event.path.replace('/.netlify/functions/proxy', '').replace('/status', '/health');
   const targetUrl = `${AGENT_URL}${path}`;
   
+  console.log('Event path:', event.path);
+  console.log('Calling:', targetUrl);
+  
   try {
     const response = await fetch(targetUrl, {
       method: event.httpMethod,
@@ -21,7 +24,10 @@ exports.handler = async (event, context) => {
       body: event.httpMethod === 'POST' ? event.body : null,
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    console.log('Response:', text.substring(0, 200));
+    
+    const data = JSON.parse(text);
     
     return {
       statusCode: 200,
@@ -29,10 +35,11 @@ exports.handler = async (event, context) => {
       body: JSON.stringify(data),
     };
   } catch (error) {
+    console.log('Error:', error.message);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: error.message, path: event.path }),
     };
   }
 };
