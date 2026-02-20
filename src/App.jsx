@@ -923,11 +923,18 @@ const NAV = [
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
-  const [leads, setLeads] = useState([]);
+  const [leads, setLeads] = useState(() => {
+    const saved = localStorage.getItem('aven-leads');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [sel, setSel] = useState(null);
   const [agentUp, setAgentUp] = useState(null);
 
   useEffect(() => { agentStatus().then(s => setAgentUp(!s.error)); }, []);
+  
+  useEffect(() => {
+    localStorage.setItem('aven-leads', JSON.stringify(leads));
+  }, [leads]);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans',sans-serif" }}>
