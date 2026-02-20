@@ -899,8 +899,13 @@ const LeadDetail = ({ lead, onClose }) => (
           <div key={i} style={{ padding: 8, background: "#F9FAFB", borderRadius: 6 }}><div style={{ fontSize: 9, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 12 }}>{x.v || "—"}</div></div>
         ))}
       </div>
-      {lead.scores && <div><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
-        {[{ l: "Email", s: lead.scores.email, m: 20 }, { l: "Company", s: lead.scores.company, m: 15 }, { l: "Contact", s: lead.scores.contact, m: 20 }, { l: "ICP Fit", s: lead.scores.icp, m: 20 }, { l: "DM", s: lead.scores.dm, m: 15 }, { l: "Budget", s: lead.scores.budget, m: 10 }].map((x, i) => <ScoreBar key={i} label={x.l} score={x.s || 0} max={x.m} color={(x.s || 0) / x.m >= .7 ? C.accept : C.reject} />)}
+      {lead.scores && <div style={{ marginBottom: 20 }}><div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Score Breakdown</div>
+        {Object.entries(lead.scores).map(([key, score]) => {
+          const maxScores = { email: 20, company: 15, contact: 20, icp: 20, aiDecisionMaker: 15, dm: 15, aiBudget: 10, budget: 10 };
+          const max = maxScores[key] || 20;
+          const label = key === "aiDecisionMaker" ? "AI Decision Maker" : key === "aiBudget" ? "AI Budget" : key === "icp" ? "ICP Fit" : key === "dm" ? "Decision Maker" : key.charAt(0).toUpperCase() + key.slice(1);
+          return <ScoreBar key={key} label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />;
+        })}
       </div>}
     </div>)}
   </Modal>
