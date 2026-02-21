@@ -402,13 +402,13 @@ const Dashboard = ({ leads }) => {
     l: m,
     v1: i < 5 ? [12, 28, 42, 58, 71][i] : acc.length,
     v2: i < 5 ? [4, 8, 14, 18, 22][i] : rej.length,
-  });});
+  }));
 
   // Score trend
   const scoreTrend = months.map((m, i) => ({
     l: m,
     v1: i < 5 ? [62, 68, 72, 76, 79][i] : parseFloat(avg) || 78,
-  });});
+  }));
 
   // Acceptance reasons
   const accReasons = {};
@@ -896,7 +896,7 @@ const Vendors = ({ leads }) => {
   });
 
   const saveConnection = (name) => {
-    setConnections(p => ({ ...p, [name]: { ...p[name], connected: true } });});
+    setConnections(p => ({ ...p, [name]: { ...p[name], connected: true } }));
     setConnectModal(null);
   };
 
