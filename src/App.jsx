@@ -402,13 +402,13 @@ const Dashboard = ({ leads }) => {
     l: m,
     v1: i < 5 ? [12, 28, 42, 58, 71][i] : acc.length,
     v2: i < 5 ? [4, 8, 14, 18, 22][i] : rej.length,
-  }));
+  });});
 
   // Score trend
   const scoreTrend = months.map((m, i) => ({
     l: m,
     v1: i < 5 ? [62, 68, 72, 76, 79][i] : parseFloat(avg) || 78,
-  }));
+  });});
 
   // Acceptance reasons
   const accReasons = {};
@@ -610,38 +610,38 @@ const Validate = ({ leads, setLeads }) => {
           industry: "Technology",
           phone: p.phone || "",
           linkedin: p.linkedin || ""
-      }));
+      });});
 
       const result = await agentBatch(payload);
       clearInterval(iv); setProgress(100);
       if (result.results) {
-        const newLeads = result.results.map((r, i) => ({
+        const newLeads = result.results.map((r, i) => { const corrected = correctScores(r); return ({
           id: `AV-${String(leads.length + i + 1).padStart(4, "0")}`,
           firstName: parsed[i]?.firstName || "",
           lastName: parsed[i]?.lastName || "",
-          email: r.email || parsed[i]?.email || "",
-          company: r.company || parsed[i]?.company || "",
+          email: corrected.email || parsed[i]?.email || "",
+          company: corrected.company || parsed[i]?.company || "",
           title: parsed[i]?.title || "",
           jobTitle: parsed[i]?.title || "",
           employeeCount: parsed[i]?.employeeCount || 0,
           companySize: parsed[i]?.employeeCount || 0,
           phone: parsed[i]?.phone || "",
           linkedin: parsed[i]?.linkedin || "",
-          scores: r.scores,
-          totalScore: r.totalScore,
-          status: r.decision === "ACCEPT" ? "accepted" : "rejected",
-          decision: r.decision,
-          reasoning: r.reasoning,
-          agentSignature: r.agentSignature,
-          teeProof: r.teeProof,
-          validatedAt: r.timestamp || new Date().toISOString(),
-          rejectedAt: r.decision === "REJECT" ? (r.timestamp || new Date().toISOString()) : null,
-          rejectionReason: r.decision === "REJECT" ? (r.reasoning?.overall || "Score below threshold") : null,
+          scores: corrected.scores,
+          totalScore: corrected.totalScore,
+          status: corrected.decision === "ACCEPT" ? "accepted" : "rejected",
+          decision: corrected.decision,
+          reasoning: corrected.reasoning,
+          agentSignature: corrected.agentSignature,
+          teeProof: corrected.teeProof,
+          validatedAt: corrected.timestamp || new Date().toISOString(),
+          rejectedAt: corrected.decision === "REJECT" ? (corrected.timestamp || new Date().toISOString()) : null,
+          rejectionReason: corrected.decision === "REJECT" ? (corrected.reasoning?.overall || "Score below threshold") : null,
           vendor: parsed[i]?.vendor || "Direct",
           selected: false,
           pushed: false,
-          eigenVerified: r.teeProof?.runningInTEE || false,
-        }));
+          eigenVerified: corrected.teeProof?.runningInTEE || false,
+        });});
         setLeads(p => [...p, ...newLeads]);
         setBatch({ results: newLeads, meta: result.batchMeta });
       } else {
@@ -652,7 +652,7 @@ const Validate = ({ leads, setLeads }) => {
           validatedAt: new Date().toISOString(), cost: 10, proof: {},
           selected: false, pushed: false, eigenVerified: false,
           acceptReasons: null, rejectionReason: "Agent offline",
-        }));
+        });});
         setLeads(pr => [...pr, ...fallback]);
         setBatch({ results: fallback, meta: { totalProcessed: fallback.length, accepted: 0, rejected: 0 } });
       }
@@ -695,7 +695,7 @@ const Validate = ({ leads, setLeads }) => {
         cost: 10,
         vendor: "Direct", selected: false, pushed: false,
         eigenVerified: result.teeProof?.runningInTEE || false,
-        phone: "", linkedin: "",
+        phone: form.phone || "", linkedin: form.linkedin || "",
       };
       setLeads(p => [...p, nl]); setSingleResult(nl);
     } else {
@@ -896,7 +896,7 @@ const Vendors = ({ leads }) => {
   });
 
   const saveConnection = (name) => {
-    setConnections(p => ({ ...p, [name]: { ...p[name], connected: true } }));
+    setConnections(p => ({ ...p, [name]: { ...p[name], connected: true } });});
     setConnectModal(null);
   };
 
