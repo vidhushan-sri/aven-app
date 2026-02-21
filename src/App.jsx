@@ -641,7 +641,7 @@ const Validate = ({ leads, setLeads }) => {
           selected: false,
           pushed: false,
           eigenVerified: corrected.teeProof?.runningInTEE || false,
-        });});
+        }); });
         setLeads(p => [...p, ...newLeads]);
         setBatch({ results: newLeads, meta: result.batchMeta });
       } else {
