@@ -55,6 +55,39 @@ async function api(path, opts = {}) {
 const agentValidate = (lead) => api("/validate", { method: "POST", body: JSON.stringify(lead) });
 const agentBatch = (leads) => api("/validate/batch", { method: "POST", body: JSON.stringify({ leads }) });
 const agentStatus = () => api("/status");
+
+// Fix backend scoring bugs
+function correctScores(result) {
+  if (!result.scores || !result.reasoning) return result;
+  
+  const corrected = { ...result };
+  
+  // Fix AI Decision Maker score
+  if (result.reasoning.aiDecisionMaker) {
+    const text = result.reasoning.aiDecisionMaker;
+    // Extract number from start (e.g., "85 - text" -> 85)
+    const match = text.match(/^(\d+)/);
+    if (match) {
+      const percentage = parseInt(match[1]);
+      corrected.scores.aiDecisionMaker = Math.round((percentage / 100) * 15);
+    }
+  }
+  
+  // Fix AI Budget score
+  if (result.reasoning.aiBudget) {
+    const text = result.reasoning.aiBudget.toLowerCase();
+    if (text.includes('high')) corrected.scores.aiBudget = 10;
+    else if (text.includes('medium')) corrected.scores.aiBudget = 6;
+    else if (text.includes('low')) corrected.scores.aiBudget = 3;
+    else if (text.includes('none')) corrected.scores.aiBudget = 0;
+  }
+  
+  // Recalculate total score
+  corrected.totalScore = Object.values(corrected.scores).reduce((sum, score) => sum + score, 0);
+  
+  return corrected;
+}
+
 const agentConfig = (cfg) => api("/api/config", { method: "PUT", body: JSON.stringify(cfg) });
 const agentAudit = () => api("/api/audit");
 
@@ -288,7 +321,7 @@ function parseCSV(text) {
       industry: obj.industry || obj.sector || "",
       employeeCount: parseInt(obj.employee_count || obj.employees || obj.company_size || obj.size || "0") || 0,
       phone: obj.phone || obj.phone_number || "",
-      linkedIn: obj.linkedin || obj.linkedin_url || "",
+      linkedin: obj.linkedin || obj.linkedin_url || "",
       vendor: obj.vendor || obj.source || obj.lead_source || "Direct",
     };
   }).filter(r => r.email && r.company);
