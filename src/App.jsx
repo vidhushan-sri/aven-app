@@ -1160,8 +1160,7 @@ export default function App() {
         {page === "validate" && <Validate leads={leads} setLeads={setLeads} />}
         {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
         {page === "vendors" && <Vendors leads={leads} />}
-        
-              </div>
+      </div>
 
       <LeadDetail lead={sel} onClose={() => setSel(null)} />
     </div>
