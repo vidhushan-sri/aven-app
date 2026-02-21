@@ -492,7 +492,7 @@ const Dashboard = ({ leads }) => {
 // ═══════════════════════════════════════════════════════════════════════
 const Validate = ({ leads, setLeads }) => {
   const [tab, setTab] = useState("Batch Upload");
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", company: "", title: "", industry: "SaaS", employeeCount: "1000" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", company: "", title: "", industry: "SaaS", employeeCount: "1000", phone: "", linkedin: "" });
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [batch, setBatch] = useState(null);
@@ -606,7 +606,17 @@ const Validate = ({ leads, setLeads }) => {
       {tab === "Single Lead" ? (
         <Card>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-            {[{ k: "firstName", l: "First Name" }, { k: "lastName", l: "Last Name" }, { k: "email", l: "Email *" }, { k: "company", l: "Company *" }, { k: "title", l: "Job Title" }, { k: "industry", l: "Industry" }, { k: "employeeCount", l: "Employees" }].map(f => (
+            {[
+              { k: "firstName", l: "First Name" }, 
+              { k: "lastName", l: "Last Name" }, 
+              { k: "email", l: "Email *" }, 
+              { k: "company", l: "Company *" }, 
+              { k: "title", l: "Job Title *" }, 
+              { k: "industry", l: "Industry" }, 
+              { k: "employeeCount", l: "Employees" },
+              { k: "phone", l: "Phone" },
+              { k: "linkedin", l: "LinkedIn URL" }
+            ].map(f => (
               <div key={f.k}><label style={{ display: "block", fontSize: 11, color: C.text2, marginBottom: 3 }}>{f.l}</label>
                 <input value={form[f.k]} onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", background: "#F9FAFB", border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12.5, color: C.text, outline: "none" }} /></div>
             ))}
@@ -951,7 +961,7 @@ const LeadDetail = ({ lead, onClose }) => {
                   <ScoreBar label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />
                   {explanation && (
                     <div style={{ fontSize: 12, color: C.text2, marginTop: 6, lineHeight: 1.5, marginLeft: 128, background: "#F9FAFB", padding: "8px 12px", borderRadius: 6, borderLeft: `3px solid ${(score || 0) / max >= .7 ? C.accept : C.reject}` }}>
-                      {explanation}
+                      {explanation.split('<|end|>')[1] || explanation.split('<|channel|>')[0] || explanation}
                     </div>
                   )}
                 </div>
@@ -982,6 +992,14 @@ const LeadDetail = ({ lead, onClose }) => {
             {lead.agentSignature && <div><span style={{ color: "#FBBF24" }}>agent_signature:</span> {lead.agentSignature}</div>}
             {lead.teeProof.deterministicSeed && <div><span style={{ color: "#A78BFA" }}>deterministic_seed:</span> {lead.teeProof.deterministicSeed}</div>}
             {lead.teeProof.agentWallet && <div><span style={{ color: "#34D399" }}>agent_wallet:</span> {lead.teeProof.agentWallet}</div>}
+            {lead.reasoning?.overall && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ color: "#FBBF24" }}>reasoning_hash:</div>
+                <div style={{ marginLeft: 16, color: "#D1D5DB", fontSize: 10 }}>
+                  {btoa(lead.reasoning.overall).substring(0, 64)}...
+                </div>
+              </div>
+            )}
            
             {lead.teeProof.eigenaiProofs?.decisionMaker && (
                 <div style={{ marginTop: 8 }}>
