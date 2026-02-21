@@ -63,45 +63,73 @@ function correctScores(result) {
   const corrected = { ...result };
   corrected.scores = { ...result.scores };
   
-  // Fix AI Decision Maker score - backend returns 0 but reasoning has the real score
+  // Helper to clean junk from AI responses
+  function cleanText(text) {
+    if (!text) return '';
+    let cleaned = text;
+    // Remove <|channel|>...<|end|> tags
+    if (cleaned.includes('<|end|>')) {
+      cleaned = cleaned.split('<|end|>').pop().trim();
+    }
+    if (cleaned.includes('<|channel|>')) {
+      cleaned = cleaned.split('<|channel|>')[0].trim();
+    }
+    return cleaned;
+  }
+  
+  // Fix AI Decision Maker score
   if (result.reasoning.aiDecisionMaker) {
-    const text = result.reasoning.aiDecisionMaker;
-    // Try to extract number from text (formats: "85 -", "85–", "85 As", etc)
-    const match = text.match(/(\d+)\s*[-–—]/);
+    const cleaned = cleanText(result.reasoning.aiDecisionMaker);
+    console.log('AI Decision Maker raw:', result.reasoning.aiDecisionMaker.substring(0, 50));
+    console.log('AI Decision Maker cleaned:', cleaned.substring(0, 50));
+    
+    // Try to extract number (formats: "85 -", "85–", "85 As")
+    const match = cleaned.match(/(\d+)\s*[-–—]/);
     if (match) {
       const percentage = parseInt(match[1]);
       corrected.scores.aiDecisionMaker = Math.round((percentage / 100) * 15);
       console.log(`Fixed AI Decision Maker: ${percentage}% -> ${corrected.scores.aiDecisionMaker}/15`);
     } else {
-      // If no number found, check if reasoning indicates they ARE a decision maker
-      const lower = text.toLowerCase();
-      if (lower.includes('decision-maker') || lower.includes('decisionmaker') || 
-          lower.includes('primary') || lower.includes('oversee') || 
-          lower.includes('typically decides') || lower.includes('senior leader')) {
-        corrected.scores.aiDecisionMaker = 15; // Max score if reasoning is positive
-        console.log('Fixed AI Decision Maker: inferred from positive reasoning -> 15/15');
+      // Fallback: check if reasoning is positive
+      const lower = cleaned.toLowerCase();
+      if (lower.includes('decision-maker') || lower.includes('primary') || 
+          lower.includes('oversee') || lower.includes('typically') || 
+          lower.includes('senior leader') || lower.includes('authority over') ||
+          lower.includes('squarely among')) {
+        corrected.scores.aiDecisionMaker = 15;
+        console.log('Fixed AI Decision Maker: positive reasoning -> 15/15');
+      } else if (lower.includes('unlikely') || lower.includes('insufficient') || 
+                 lower.includes('no evidence')) {
+        corrected.scores.aiDecisionMaker = 0;
+        console.log('Fixed AI Decision Maker: negative reasoning -> 0/15');
+      } else {
+        console.log('Fixed AI Decision Maker: unclear -> keeping 0/15');
       }
     }
   }
   
   // Fix AI Budget score
   if (result.reasoning.aiBudget) {
-    const text = result.reasoning.aiBudget.toLowerCase();
-    if (text.includes('high')) corrected.scores.aiBudget = 10;
-    else if (text.includes('medium')) corrected.scores.aiBudget = 6;
-    else if (text.includes('low')) corrected.scores.aiBudget = 3;
-    else if (text.includes('none')) corrected.scores.aiBudget = 0;
-    console.log(`Fixed AI Budget: ${text.substring(0, 20)}... -> ${corrected.scores.aiBudget}/10`);
+    const cleaned = cleanText(result.reasoning.aiBudget);
+    const lower = cleaned.toLowerCase();
+    
+    if (lower.includes('high')) corrected.scores.aiBudget = 10;
+    else if (lower.includes('medium')) corrected.scores.aiBudget = 6;
+    else if (lower.includes('low')) corrected.scores.aiBudget = 3;
+    else if (lower.includes('none')) corrected.scores.aiBudget = 0;
+    
+    console.log(`Fixed AI Budget: ${cleaned.substring(0, 30)}... -> ${corrected.scores.aiBudget}/10`);
   }
   
   // Recalculate total score
   corrected.totalScore = Object.values(corrected.scores).reduce((sum, score) => sum + score, 0);
   console.log(`Total score recalculated: ${result.totalScore} -> ${corrected.totalScore}`);
   
-  // Update decision based on new score
-  if (corrected.totalScore >= 80 && result.decision === 'REJECT') {
+  // Update decision if score changed
+  if (corrected.totalScore >= 80 && corrected.totalScore !== result.totalScore) {
     corrected.decision = 'ACCEPT';
     corrected.status = 'accepted';
+    console.log('Decision changed to ACCEPT');
   }
   
   return corrected;
