@@ -616,7 +616,7 @@ const Validate = ({ leads, setLeads }) => {
   const validateSingle = async () => {
     if (!form.email || !form.company) return;
     setValidating(true); setSingleResult(null);
-    const result = await agentValidate({ 
+    let result = await agentValidate({ 
       email: form.email,
       firstName: form.firstName,
       lastName: form.lastName,
@@ -627,6 +627,7 @@ const Validate = ({ leads, setLeads }) => {
       phone: form.phone || "",
       linkedin: form.linkedin || ""
     });
+    result = correctScores(result); // Fix backend scoring
     if (!result.error && result.decision) {
       const nl = {
         id: `AV-${String(leads.length + 1).padStart(4, "0")}`,
