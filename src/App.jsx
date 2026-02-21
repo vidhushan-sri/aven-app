@@ -865,7 +865,13 @@ const LeadDetail = ({ lead, onClose }) => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Employees", v: lead.employeeCount || lead.companySize ? fmt(lead.employeeCount || lead.companySize) : "—" }].map((x, i) => (
+        {[
+          { l: "Email", v: lead.email }, 
+          { l: "Company", v: lead.company }, 
+          { l: "Employees", v: lead.employeeCount || lead.companySize ? fmt(lead.employeeCount || lead.companySize) : "—" },
+          { l: "Phone", v: lead.phone || "—" },
+          { l: "LinkedIn", v: lead.linkedin || "—" }
+        ].map((x, i) => (
           <div key={i} style={{ padding: "10px 12px", background: "#F9FAFB", borderRadius: 8, border: `1px solid ${C.borderLight}` }}>
             <div style={{ fontSize: 10, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 4 }}>{x.l}</div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>{x.v || "—"}</div>
@@ -902,7 +908,19 @@ const LeadDetail = ({ lead, onClose }) => {
                   <ScoreBar label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />
                   {explanation && (
                     <div style={{ fontSize: 12, color: C.text2, marginTop: 6, lineHeight: 1.5, marginLeft: 128, background: "#F9FAFB", padding: "8px 12px", borderRadius: 6, borderLeft: `3px solid ${(score || 0) / max >= .7 ? C.accept : C.reject}` }}>
-                      {explanation.split('<|end|>')[1] || explanation.split('<|channel|>')[0] || explanation}
+                      {(() => {
+                        let cleaned = explanation;
+                        if (cleaned.includes('<|end|>')) {
+                          cleaned = cleaned.split('<|end|>').pop().trim();
+                        }
+                        if (cleaned.includes('<|channel|>')) {
+                          cleaned = cleaned.split('<|channel|>')[0].trim();
+                        }
+                        // Extract just the final answer (number + sentence)
+                        const match = cleaned.match(/^\d+\s*[–—-]\s*(.+)$/);
+                        if (match) return match[1];
+                        return cleaned;
+                      })()}
                     </div>
                   )}
                 </div>
