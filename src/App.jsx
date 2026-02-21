@@ -509,7 +509,7 @@ const Validate = ({ leads, setLeads }) => {
       setProcessing(true); setProgress(0);
       // Simulate progress while calling agent
       const iv = setInterval(() => setProgress(p => Math.min(p + 2, 95)), 100);
-      const result = await agentBatch(parsed);
+      const result = await agentBatch(payload);
       clearInterval(iv); setProgress(100);
       if (result.results) {
         const newLeads = result.results.map((r, i) => ({
