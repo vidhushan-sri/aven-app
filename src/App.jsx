@@ -61,15 +61,26 @@ function correctScores(result) {
   if (!result.scores || !result.reasoning) return result;
   
   const corrected = { ...result };
+  corrected.scores = { ...result.scores };
   
-  // Fix AI Decision Maker score
+  // Fix AI Decision Maker score - backend returns 0 but reasoning has the real score
   if (result.reasoning.aiDecisionMaker) {
     const text = result.reasoning.aiDecisionMaker;
-    // Extract number from start (e.g., "85 - text" -> 85)
-    const match = text.match(/^(\d+)/);
+    // Try to extract number from text (formats: "85 -", "85–", "85 As", etc)
+    const match = text.match(/(\d+)\s*[-–—]/);
     if (match) {
       const percentage = parseInt(match[1]);
       corrected.scores.aiDecisionMaker = Math.round((percentage / 100) * 15);
+      console.log(`Fixed AI Decision Maker: ${percentage}% -> ${corrected.scores.aiDecisionMaker}/15`);
+    } else {
+      // If no number found, check if reasoning indicates they ARE a decision maker
+      const lower = text.toLowerCase();
+      if (lower.includes('decision-maker') || lower.includes('decisionmaker') || 
+          lower.includes('primary') || lower.includes('oversee') || 
+          lower.includes('typically decides') || lower.includes('senior leader')) {
+        corrected.scores.aiDecisionMaker = 15; // Max score if reasoning is positive
+        console.log('Fixed AI Decision Maker: inferred from positive reasoning -> 15/15');
+      }
     }
   }
   
@@ -80,10 +91,18 @@ function correctScores(result) {
     else if (text.includes('medium')) corrected.scores.aiBudget = 6;
     else if (text.includes('low')) corrected.scores.aiBudget = 3;
     else if (text.includes('none')) corrected.scores.aiBudget = 0;
+    console.log(`Fixed AI Budget: ${text.substring(0, 20)}... -> ${corrected.scores.aiBudget}/10`);
   }
   
   // Recalculate total score
   corrected.totalScore = Object.values(corrected.scores).reduce((sum, score) => sum + score, 0);
+  console.log(`Total score recalculated: ${result.totalScore} -> ${corrected.totalScore}`);
+  
+  // Update decision based on new score
+  if (corrected.totalScore >= 80 && result.decision === 'REJECT') {
+    corrected.decision = 'ACCEPT';
+    corrected.status = 'accepted';
+  }
   
   return corrected;
 }
@@ -589,6 +608,7 @@ const Validate = ({ leads, setLeads }) => {
           teeProof: r.teeProof,
           validatedAt: r.timestamp || new Date().toISOString(),
           rejectedAt: r.decision === "REJECT" ? (r.timestamp || new Date().toISOString()) : null,
+          rejectionReason: r.decision === "REJECT" ? (r.reasoning?.overall || "Score below threshold") : null,
           vendor: parsed[i]?.vendor || "Direct",
           selected: false,
           pushed: false,
@@ -623,7 +643,7 @@ const Validate = ({ leads, setLeads }) => {
       company: form.company,
       jobTitle: form.title,
       companySize: parseInt(form.employeeCount) || 1000,
-      industry: form.industry,
+      industry: "Technology",
       phone: form.phone || "",
       linkedin: form.linkedin || ""
     });
@@ -632,7 +652,7 @@ const Validate = ({ leads, setLeads }) => {
       const nl = {
         id: `AV-${String(leads.length + 1).padStart(4, "0")}`,
         firstName: form.firstName, lastName: form.lastName, email: form.email,
-        company: form.company, title: form.title, jobTitle: form.title, industry: form.industry,
+        company: form.company, title: form.title, jobTitle: form.title, industry: "Technology",
         employeeCount: parseInt(form.employeeCount) || 1000, companySize: parseInt(form.employeeCount) || 1000,
         scores: result.scores, totalScore: result.totalScore,
         status: result.decision === "ACCEPT" ? "accepted" : "rejected",
