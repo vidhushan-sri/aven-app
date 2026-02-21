@@ -954,28 +954,29 @@ const Vendors = ({ leads }) => {
 // LEAD DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════════════
 const LeadDetail = ({ lead, onClose }) => {
+  const correctedLead = correctScores(lead || {});
   if (!lead) return null;
 
   return (
-    <Modal open={!!lead} onClose={onClose} title="Lead Intelligence Report" width={720}>
+    <Modal open={!!correctedLead} onClose={onClose} title="Lead Intelligence Report" width={720}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>{lead.firstName} {lead.lastName || lead.email.split('@')[0]}</div>
-          <div style={{ fontSize: 13, color: C.text2, marginTop: 2 }}>{lead.title || lead.jobTitle || 'No Title'} at {lead.company}</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{correctedLead.firstName} {correctedLead.lastName || correctedLead.email.split('@')[0]}</div>
+          <div style={{ fontSize: 13, color: C.text2, marginTop: 2 }}>{correctedLead.title || correctedLead.jobTitle || 'No Title'} at {correctedLead.company}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-           <Badge color={lead.status === "accepted" ? C.accept : C.reject}>{lead.status}</Badge>
-           <div style={{ fontSize: 24, fontWeight: 700, marginTop: 6, color: lead.status === "accepted" ? C.greenText : C.roseText }}>{lead.totalScore || 0}/100</div>
+           <Badge color={correctedLead.status === "accepted" ? C.accept : C.reject}>{correctedLead.status}</Badge>
+           <div style={{ fontSize: 24, fontWeight: 700, marginTop: 6, color: correctedLead.status === "accepted" ? C.greenText : C.roseText }}>{correctedLead.totalScore || 0}/100</div>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
         {[
-          { l: "Email", v: lead.email }, 
-          { l: "Company", v: lead.company }, 
-          { l: "Employees", v: lead.employeeCount || lead.companySize ? fmt(lead.employeeCount || lead.companySize) : "—" },
-          { l: "Phone", v: lead.phone || "—" },
-          { l: "LinkedIn", v: lead.linkedin || "—" }
+          { l: "Email", v: correctedLead.email }, 
+          { l: "Company", v: correctedLead.company }, 
+          { l: "Employees", v: correctedLead.employeeCount || correctedLead.companySize ? fmt(correctedLead.employeeCount || correctedLead.companySize) : "—" },
+          { l: "Phone", v: correctedLead.phone || "—" },
+          { l: "LinkedIn", v: correctedLead.linkedin || "—" }
         ].map((x, i) => (
           <div key={i} style={{ padding: "10px 12px", background: "#F9FAFB", borderRadius: 8, border: `1px solid ${C.borderLight}` }}>
             <div style={{ fontSize: 10, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 4 }}>{x.l}</div>
@@ -985,14 +986,14 @@ const LeadDetail = ({ lead, onClose }) => {
       </div>
 
       {/* AI Evaluation & Reasoning Section */}
-      {lead.scores && lead.reasoning && (
+      {correctedLead.scores && correctedLead.reasoning && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
              <I n="search" s={16} /> Evaluation & Reasoning
           </div>
          
           <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 20px" }}>
-            {Object.entries(lead.scores).map(([key, score]) => {
+            {Object.entries(correctedLead.scores).map(([key, score]) => {
               const maxScores = { email: 20, company: 15, contact: 20, icp: 20, aiDecisionMaker: 15, dm: 15, aiBudget: 10, budget: 10 };
               const max = maxScores[key] || 20;
               const labels = {
@@ -1006,13 +1007,13 @@ const LeadDetail = ({ lead, onClose }) => {
                 budget: "Budget Authority"
               };
               const label = labels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-              const explanation = lead.reasoning[key];
+              const explanation = correctedLead.reasoning[key];
              
               return (
                 <div key={key} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.borderLight}` }}>
                   <ScoreBar label={label} score={score || 0} max={max} color={(score || 0) / max >= .7 ? C.accept : C.reject} />
                   {explanation && (
-                    <div style={{ fontSize: 12, color: C.text2, marginTop: 6, lineHeight: 1.5, marginLeft: 128, background: "#F9FAFB", padding: "8px 12px", borderRadius: 6, borderLeft: `3px solid ${(score || 0) / max >= .7 ? C.accept : C.reject}` }}>
+                    <div style={{ fontSize: 12, color: C.text2, marginTop: 6, lineHeight: 1.5, marginLeft: 128, background: "#F9FAFB", padding: "8px 12px", borderRadius: 6, borderLeft: `3px solid ${(score || 0) / max >= .7 ? C.accept : C.reject}`, whiteSpace: "normal", wordBreak: "break-word" }}>
                       {(() => {
                         let cleaned = explanation;
                         if (cleaned.includes('<|end|>')) {
@@ -1032,10 +1033,10 @@ const LeadDetail = ({ lead, onClose }) => {
               );
             })}
 
-            {lead.reasoning.overall && (
-              <div style={{ marginTop: 16, padding: 12, background: lead.status === "accepted" ? C.green : C.rose, borderRadius: 8, fontSize: 12.5, color: lead.status === "accepted" ? C.greenText : C.roseText, display: "flex", gap: 8 }}>
+            {correctedLead.reasoning.overall && (
+              <div style={{ marginTop: 16, padding: 12, background: correctedLead.status === "accepted" ? C.green : C.rose, borderRadius: 8, fontSize: 12.5, color: correctedLead.status === "accepted" ? C.greenText : C.roseText, display: "flex", gap: 8 }}>
                 <div style={{ marginTop: 2 }}><I n="info" s={14} /></div>
-                <div><strong>Final Decision:</strong> {lead.reasoning.overall}</div>
+                <div><strong>Final Decision:</strong> {correctedLead.reasoning.overall}</div>
               </div>
             )}
           </div>
@@ -1043,7 +1044,7 @@ const LeadDetail = ({ lead, onClose }) => {
       )}
 
       {/* Cryptographic TEE Proof Section */}
-      {lead.teeProof && (
+      {correctedLead.teeProof && (
         <div>
            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
               <I n="lock" s={16} /> Cryptographic Attestation
@@ -1051,45 +1052,45 @@ const LeadDetail = ({ lead, onClose }) => {
            <div style={{ background: "#1A1D26", color: "#E5E7EB", borderRadius: 10, padding: 16, fontFamily: "'JetBrains Mono'", fontSize: 11, lineHeight: 1.8, wordBreak: "break-all", boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)" }}>
             <div style={{ color: "#9CA3AF", marginBottom: 8 }}>// Sovereign Agent TEE Proof</div>
            
-            {lead.teeProof.platform && <div><span style={{ color: "#60A5FA" }}>platform:</span> {lead.teeProof.platform}</div>}
-            {lead.teeProof.appId && <div><span style={{ color: "#60A5FA" }}>app_id:</span> {lead.teeProof.appId}</div>}
-            {lead.agentSignature && <div><span style={{ color: "#FBBF24" }}>agent_signature:</span> {lead.agentSignature}</div>}
-            {lead.teeProof.deterministicSeed && <div><span style={{ color: "#A78BFA" }}>deterministic_seed:</span> {lead.teeProof.deterministicSeed}</div>}
-            {lead.teeProof.agentWallet && <div><span style={{ color: "#34D399" }}>agent_wallet:</span> {lead.teeProof.agentWallet}</div>}
-            {lead.reasoning?.overall && (
+            {correctedLead.teeProof.platform && <div><span style={{ color: "#60A5FA" }}>platform:</span> {correctedLead.teeProof.platform}</div>}
+            {correctedLead.teeProof.appId && <div><span style={{ color: "#60A5FA" }}>app_id:</span> {correctedLead.teeProof.appId}</div>}
+            {correctedLead.agentSignature && <div><span style={{ color: "#FBBF24" }}>agent_signature:</span> {correctedLead.agentSignature}</div>}
+            {correctedLead.teeProof.deterministicSeed && <div><span style={{ color: "#A78BFA" }}>deterministic_seed:</span> {correctedLead.teeProof.deterministicSeed}</div>}
+            {correctedLead.teeProof.agentWallet && <div><span style={{ color: "#34D399" }}>agent_wallet:</span> {correctedLead.teeProof.agentWallet}</div>}
+            {correctedLead.reasoning?.overall && (
               <div style={{ marginTop: 8 }}>
                 <div style={{ color: "#FBBF24" }}>reasoning_hash:</div>
                 <div style={{ marginLeft: 16, color: "#D1D5DB", fontSize: 10 }}>
-                  {btoa(lead.reasoning.overall).substring(0, 64)}...
+                  {btoa(correctedLead.reasoning.overall).substring(0, 64)}...
                 </div>
               </div>
             )}
            
-            {lead.teeProof.eigenaiProofs?.decisionMaker && (
+            {correctedLead.teeProof.eigenaiProofs?.decisionMaker && (
                 <div style={{ marginTop: 8 }}>
                     <div style={{ color: "#A78BFA", marginBottom: 4 }}>▸ EigenAI Decision-Maker Proof</div>
                     <div style={{ marginLeft: 16, color: "#D1D5DB" }}>
-                      <div>signature: {lead.teeProof.eigenaiProofs.decisionMaker.signature}</div>
-                      <div>fingerprint: {lead.teeProof.eigenaiProofs.decisionMaker.fingerprint}</div>
-                      <div>id: {lead.teeProof.eigenaiProofs.decisionMaker.id}</div>
+                      <div>signature: {correctedLead.teeProof.eigenaiProofs.decisionMaker.signature}</div>
+                      <div>fingerprint: {correctedLead.teeProof.eigenaiProofs.decisionMaker.fingerprint}</div>
+                      <div>id: {correctedLead.teeProof.eigenaiProofs.decisionMaker.id}</div>
                     </div>
                 </div>
             )}
 
-            {lead.teeProof.eigenaiProofs?.budgetAuthority && (
+            {correctedLead.teeProof.eigenaiProofs?.budgetAuthority && (
                 <div style={{ marginTop: 8 }}>
                     <div style={{ color: "#34D399", marginBottom: 4 }}>▸ EigenAI Budget Authority Proof</div>
                     <div style={{ marginLeft: 16, color: "#D1D5DB" }}>
-                      <div>signature: {lead.teeProof.eigenaiProofs.budgetAuthority.signature}</div>
-                      <div>fingerprint: {lead.teeProof.eigenaiProofs.budgetAuthority.fingerprint}</div>
-                      <div>id: {lead.teeProof.eigenaiProofs.budgetAuthority.id}</div>
+                      <div>signature: {correctedLead.teeProof.eigenaiProofs.budgetAuthority.signature}</div>
+                      <div>fingerprint: {correctedLead.teeProof.eigenaiProofs.budgetAuthority.fingerprint}</div>
+                      <div>id: {correctedLead.teeProof.eigenaiProofs.budgetAuthority.id}</div>
                     </div>
                 </div>
             )}
            
-            <div style={{ marginTop: 12, color: lead.teeProof.runningInTEE ? "#34D399" : "#FBBF24", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-               <I n={lead.teeProof.runningInTEE ? "check" : "info"} s={14} />
-               {lead.teeProof.runningInTEE ? "Verified in EigenCompute TEE Enclave" : "Running in Standard Mode"}
+            <div style={{ marginTop: 12, color: correctedLead.teeProof.runningInTEE ? "#34D399" : "#FBBF24", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+               <I n={correctedLead.teeProof.runningInTEE ? "check" : "info"} s={14} />
+               {correctedLead.teeProof.runningInTEE ? "Verified in EigenCompute TEE Enclave" : "Running in Standard Mode"}
             </div>
            </div>
         </div>
