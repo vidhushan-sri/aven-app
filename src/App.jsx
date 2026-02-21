@@ -514,7 +514,16 @@ const Validate = ({ leads, setLeads }) => {
       if (result.results) {
         const newLeads = result.results.map((r, i) => ({
           id: `AV-${String(leads.length + i + 1).padStart(4, "0")}`,
-          ...r.lead,
+          firstName: parsed[i]?.firstName || "",
+          lastName: parsed[i]?.lastName || "",
+          email: r.email || parsed[i]?.email || "",
+          company: r.company || parsed[i]?.company || "",
+          title: parsed[i]?.title || "",
+          jobTitle: parsed[i]?.title || "",
+          employeeCount: parsed[i]?.employeeCount || 0,
+          companySize: parsed[i]?.employeeCount || 0,
+          phone: parsed[i]?.phone || "",
+          linkedin: parsed[i]?.linkedin || "",
           scores: r.scores,
           totalScore: r.totalScore,
           status: r.decision === "ACCEPT" ? "accepted" : "rejected",
@@ -522,17 +531,12 @@ const Validate = ({ leads, setLeads }) => {
           reasoning: r.reasoning,
           agentSignature: r.agentSignature,
           teeProof: r.teeProof,
-          jobTitle: r.lead?.title || "",
-          companySize: parsed[i]?.employeeCount || 0,
-          acceptReasons: r.decision === "ACCEPT" ? [{ cat: "Met Threshold", detail: "Score exceeded threshold", score: r.totalScore }] : null,
-          rejectionReason: r.decision === "REJECT" ? (r.reasoning?.overall || "Below threshold") : null,
           validatedAt: r.timestamp || new Date().toISOString(),
           rejectedAt: r.decision === "REJECT" ? (r.timestamp || new Date().toISOString()) : null,
-          cost: 10,
-          vendor: parsed[i]?.vendor || "Direct", selected: false, pushed: false,
+          vendor: parsed[i]?.vendor || "Direct",
+          selected: false,
+          pushed: false,
           eigenVerified: r.teeProof?.runningInTEE || false,
-          phone: parsed[i]?.phone || "", linkedin: parsed[i]?.linkedIn || "",
-          employeeCount: parsed[i]?.employeeCount || 0, industry: parsed[i]?.industry || "",
         }));
         setLeads(p => [...p, ...newLeads]);
         setBatch({ results: newLeads, meta: result.batchMeta });
