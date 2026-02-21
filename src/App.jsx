@@ -492,7 +492,7 @@ const Dashboard = ({ leads }) => {
 // ═══════════════════════════════════════════════════════════════════════
 const Validate = ({ leads, setLeads }) => {
   const [tab, setTab] = useState("Batch Upload");
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", company: "", title: "", industry: "SaaS", employeeCount: "1000", phone: "", linkedin: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", company: "", title: "", employeeCount: "1000", phone: "", linkedin: "" });
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [batch, setBatch] = useState(null);
@@ -612,8 +612,7 @@ const Validate = ({ leads, setLeads }) => {
               { k: "email", l: "Email *" }, 
               { k: "company", l: "Company *" }, 
               { k: "title", l: "Job Title *" }, 
-              { k: "industry", l: "Industry" }, 
-              { k: "employeeCount", l: "Employees" },
+              { k: "employeeCount", l: "Employees *" },
               { k: "phone", l: "Phone" },
               { k: "linkedin", l: "LinkedIn URL" }
             ].map(f => (
@@ -636,7 +635,7 @@ const Validate = ({ leads, setLeads }) => {
               <div onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${C.border}`, borderRadius: 10, padding: "44px 24px", textAlign: "center", cursor: "pointer" }}>
                 <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
                 <I n="upload" s={32} c={C.text3} /><div style={{ fontSize: 14, fontWeight: 600, marginTop: 12 }}>Drop CSV here or click to upload</div>
-                <div style={{ fontSize: 12, color: C.text2, marginTop: 4 }}>CSV with columns: first_name, last_name, email, company, title, industry, employee_count, vendor</div>
+                <div style={{ fontSize: 12, color: C.text2, marginTop: 4 }}>CSV columns: first_name, last_name, email, company, title, employee_count, phone, linkedin (all required)</div>
                 <Btn v="secondary" style={{ marginTop: 14 }}>Select File</Btn>
               </div>
             ) : processing ? (
@@ -767,65 +766,6 @@ const AllLeads = ({ leads, setLeads, setSel }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
-// DISPUTES (kept as-is)
-// ═══════════════════════════════════════════════════════════════════════
-const Disputes = ({ leads }) => {
-  const rej = leads.filter(l => l.status === "rejected");
-  const active = rej.filter((_, i) => i % 3 !== 0), resolved = rej.filter((_, i) => i % 3 === 0);
-  const [tab, setTab] = useState("Active");
-  const [proof, setProof] = useState(null);
-  const data = tab === "Active" ? active : tab === "Resolved" ? resolved : rej;
-
-  return (
-    <div className="fi">
-      <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.02em" }}>Disputes</h1>
-        <p style={{ color: C.text2, marginTop: 2, fontSize: 13 }}>Auto-filed disputes with cryptographic proofs</p>
-      </div>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
-        <StatCard label="Active" value={active.length} bg={C.amber} sparkColor={C.amberDark} sparkData={[2, 5, 8, 12, active.length]} icon="⏳" />
-        <StatCard label="Resolved" value={resolved.length} bg={C.green} sparkColor={C.greenDark} sparkData={[1, 3, 6, 9, resolved.length]} icon="✅" />
-        <StatCard label="Value" value={$(rej.length * 10)} bg={C.blue} sparkColor={C.blueDark} sparkData={[10, 40, 80, 160, rej.length * 10]} icon="💰" />
-      </div>
-      <Tabs tabs={["Active", "Resolved", "Proof Library"]} active={tab} onChange={setTab} />
-      {data.length > 0 ? (
-        <Card style={{ padding: 0 }}>
-          <Table cols={[
-            { label: "Lead", render: r => <span style={{ fontWeight: 500 }}>{r.firstName} {r.lastName}</span> },
-            { label: "Vendor", key: "vendor" },
-            { label: "Reason", render: r => <span style={{ fontSize: 11 }}>{r.rejectionReason || "—"}</span> },
-            { label: "Amount", render: r => <span style={{ fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>{$(r.cost)}</span> },
-            { label: "Proof", render: r => <Btn v="ghost" sz="sm" onClick={() => setProof(r)}><I n="lock" s={13} /> View</Btn> },
-          ]} data={data.slice(0, 30)} />
-        </Card>
-      ) : <Card style={{ textAlign: "center", padding: 40, color: C.text3 }}>No disputes in this category.</Card>}
-
-      <Modal open={!!proof} onClose={() => setProof(null)} title="Cryptographic Proof" width={620}>
-        {proof && (<div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-            <div><div style={{ fontSize: 16, fontWeight: 700 }}>{proof.firstName} {proof.lastName}</div><div style={{ fontSize: 12, color: C.text2 }}>{proof.company}</div></div>
-            <Badge color={C.reject}>Score {proof.totalScore || 0}/100</Badge>
-          </div>
-          {proof.scores && <div style={{ marginBottom: 16 }}>
-            {[{ l: "Email", s: proof.scores.email, m: 20 }, { l: "Company", s: proof.scores.company, m: 15 }, { l: "Contact", s: proof.scores.contact, m: 20 }, { l: "ICP", s: proof.scores.icp, m: 20 }, { l: "DM", s: proof.scores.dm, m: 15 }, { l: "Budget", s: proof.scores.budget, m: 10 }].map((x, i) => <ScoreBar key={i} label={x.l} score={x.s || 0} max={x.m} color={(x.s || 0) / x.m >= .7 ? C.accept : C.reject} />)}
-          </div>}
-          <div style={{ background: "#F9FAFB", borderRadius: 8, padding: 14, fontFamily: "'JetBrains Mono'", fontSize: 10.5, lineHeight: 2, border: `1px solid ${C.border}`, wordBreak: "break-all" }}>
-            <div style={{ color: C.text3 }}>// Sovereign Agent Proof Package</div>
-            {proof.proof?.inputHash && <div><span style={{ color: C.blueDark }}>input_hash:</span> {proof.proof.inputHash}</div>}
-            {proof.proof?.outputHash && <div><span style={{ color: C.purpleDark }}>output_hash:</span> {proof.proof.outputHash}</div>}
-            {proof.proof?.eigenProof?.id && <div><span style={{ color: C.accept }}>eigenai_id:</span> {proof.proof.eigenProof.id}</div>}
-            {proof.proof?.eigenProof?.fingerprint && <div><span style={{ color: C.accept }}>fingerprint:</span> {proof.proof.eigenProof.fingerprint}</div>}
-            {proof.proof?.agentSignature?.signature && <div><span style={{ color: C.amberDark }}>agent_sig:</span> {proof.proof.agentSignature.signature}</div>}
-            {proof.proof?.agentSignature?.signer && <div><span style={{ color: C.amberDark }}>agent_wallet:</span> {proof.proof.agentSignature.signer}</div>}
-            <div style={{ marginTop: 6, color: C.accept }}>✓ Sovereign · Deterministic · {proof.proof?.eigenProof?.simulated === false ? "TEE Attested" : "Demo Mode"}</div>
-          </div>
-        </div>)}
-      </Modal>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════
 // VENDORS (actionable connections)
 // ═══════════════════════════════════════════════════════════════════════
 const Vendors = ({ leads }) => {
@@ -900,9 +840,6 @@ const Vendors = ({ leads }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// SETTINGS (actually calls backend /api/config)
-// ═══════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════
 // LEAD DETAIL MODAL
@@ -924,7 +861,7 @@ const LeadDetail = ({ lead, onClose }) => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Industry", v: lead.industry }, { l: "Employees", v: lead.employeeCount || lead.companySize ? fmt(lead.employeeCount || lead.companySize) : "—" }].map((x, i) => (
+        {[{ l: "Email", v: lead.email }, { l: "Company", v: lead.company }, { l: "Employees", v: lead.employeeCount || lead.companySize ? fmt(lead.employeeCount || lead.companySize) : "—" }].map((x, i) => (
           <div key={i} style={{ padding: "10px 12px", background: "#F9FAFB", borderRadius: 8, border: `1px solid ${C.borderLight}` }}>
             <div style={{ fontSize: 10, color: C.text3, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 4 }}>{x.l}</div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>{x.v || "—"}</div>
@@ -1041,8 +978,8 @@ const NAV = [
   { key: "dashboard", label: "Dashboard", icon: "grid" },
   { key: "validate", label: "Validate", icon: "shield" },
   { key: "leads", label: "All Leads", icon: "users" },
-  { key: "disputes", label: "Disputes", icon: "scale" },
-  { key: "vendors", label: "Vendors", icon: "bar" },];
+  { key: "vendors", label: "Vendors", icon: "bar" },
+];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -1094,8 +1031,9 @@ export default function App() {
         {page === "dashboard" && <Dashboard leads={leads} />}
         {page === "validate" && <Validate leads={leads} setLeads={setLeads} />}
         {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
-        {page === "disputes" && <Disputes leads={leads} />}
-        {page === "vendors" && <Vendors leads={leads} />}      </div>
+        {page === "vendors" && <Vendors leads={leads} />}
+        
+              </div>
 
       <LeadDetail lead={sel} onClose={() => setSel(null)} />
     </div>
