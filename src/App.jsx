@@ -1033,12 +1033,7 @@ const LeadDetail = ({ lead, onClose }) => {
               );
             })}
 
-            {correctedLead.reasoning.overall && (
-              <div style={{ marginTop: 16, padding: 12, background: correctedLead.status === "accepted" ? C.green : C.rose, borderRadius: 8, fontSize: 12.5, color: correctedLead.status === "accepted" ? C.greenText : C.roseText, display: "flex", gap: 8 }}>
-                <div style={{ marginTop: 2 }}><I n="info" s={14} /></div>
-                <div><strong>Final Decision:</strong> {correctedLead.reasoning.overall}</div>
-              </div>
-            )}
+            
           </div>
         </div>
       )}
