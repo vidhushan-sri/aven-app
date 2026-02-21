@@ -507,8 +507,31 @@ const Validate = ({ leads, setLeads }) => {
       const parsed = parseCSV(e.target.result);
       if (parsed.length === 0) return;
       setProcessing(true); setProgress(0);
-      // Simulate progress while calling agent
+     
       const iv = setInterval(() => setProgress(p => Math.min(p + 2, 95)), 100);
+     
+      // Check for validation errors
+      const errors = parsed.filter(p => p._invalid);
+      if (errors.length > 0) {
+        clearInterval(iv);
+        setProcessing(false);
+        alert("CSV validation failed:\n\n" + errors.map(e => e._error).join("\n"));
+        return;
+      }
+      
+      const validParsed = parsed.filter(p => !p._invalid);
+      const payload = validParsed.map(p => ({
+          email: p.email,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          company: p.company,
+          jobTitle: p.title,
+          companySize: p.employeeCount,
+          industry: "Technology",
+          phone: p.phone || "",
+          linkedin: p.linkedin || ""
+      }));
+
       const result = await agentBatch(payload);
       clearInterval(iv); setProgress(100);
       if (result.results) {
