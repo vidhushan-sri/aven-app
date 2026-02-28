@@ -709,7 +709,7 @@ const Validate = ({ leads, setLeads }) => {
           validatedAt: new Date().toISOString(), cost: 10, proof: {},
           selected: false, pushed: false, eigenVerified: false,
           acceptReasons: null, rejectionReason: "Agent offline",
-        });});
+        }));
         setLeads(pr => [...pr, ...fallback]);
         setBatch({ results: fallback, meta: { totalProcessed: fallback.length, accepted: 0, rejected: 0 } });
       }
