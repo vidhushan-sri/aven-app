@@ -1,7 +1,6 @@
 import React from 'react';
 
 const Dashboard = ({ leads = [] }) => {
-  // Shared colors mapped from your main App theme
   const C = {
     bg: "#FFFFFF",
     border: "#E5E7EB",
@@ -23,8 +22,7 @@ const Dashboard = ({ leads = [] }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200 }}>
-      
-      {/* HEADER AREA */}
+      {/* HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text1, marginBottom: 4 }}>Dashboard</h1>
@@ -48,9 +46,7 @@ const Dashboard = ({ leads = [] }) => {
           <div style={{ fontSize: 13, color: C.text2, fontWeight: 500, marginBottom: 8 }}>Total Leads Processed</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: C.text1 }}>24,592</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: C.success, background: C.successBg, padding: "2px 6px", borderRadius: 4, marginBottom: 6 }}>
-              +12%
-            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: C.success, background: C.successBg, padding: "2px 6px", borderRadius: 4, marginBottom: 6 }}>+12%</span>
           </div>
         </div>
 
@@ -58,9 +54,7 @@ const Dashboard = ({ leads = [] }) => {
           <div style={{ fontSize: 13, color: C.text2, fontWeight: 500, marginBottom: 8 }}>Conversion Rate</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: C.text1 }}>8.4%</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: C.success, background: C.successBg, padding: "2px 6px", borderRadius: 4, marginBottom: 6 }}>
-              +1.2%
-            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: C.success, background: C.successBg, padding: "2px 6px", borderRadius: 4, marginBottom: 6 }}>+1.2%</span>
           </div>
         </div>
 
@@ -75,65 +69,41 @@ const Dashboard = ({ leads = [] }) => {
         </div>
       </div>
 
-      {/* BOTTOM ROW: CHART & ACTIVITY */}
+      {/* BOTTOM ROW */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
-        
-        {/* Chart Section */}
         <div style={{ ...cardStyle, display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: C.text1 }}>Conversion Activity</h2>
-            <select style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, color: C.text2, outline: "none", cursor: "pointer" }}>
+            <select style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, color: C.text2, cursor: "pointer" }}>
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
             </select>
           </div>
           <div style={{ flex: 1, minHeight: 250, background: "#F9FAFB", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: C.text3, border: `1px dashed ${C.border}` }}>
-            [ Insert Line Chart Component Here ]
+            [ Chart Visualization ]
           </div>
         </div>
 
-        {/* Recent Activity Section */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: C.text1, marginBottom: 20 }}>Recent Activity</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.primary, marginTop: 6 }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.text1 }}>Lead #1024 Qualified</div>
-                <div style={{ fontSize: 12, color: C.text3 }}>2 minutes ago</div>
+            {[
+              { title: "Lead #1024 Qualified", time: "2 minutes ago", color: C.primary },
+              { title: "Follow-up email sent", time: "15 minutes ago", color: C.success },
+              { title: "System backup completed", time: "1 hour ago", color: C.text3 },
+              { title: "Campaign 'Alpha' Launched", time: "Yesterday", color: C.primary }
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.color, marginTop: 6 }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text1 }}>{item.title}</div>
+                  <div style={{ fontSize: 12, color: C.text3 }}>{item.time}</div>
+                </div>
               </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.success, marginTop: 6 }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.text1 }}>Follow-up email sent to Sarah J.</div>
-                <div style={{ fontSize: 12, color: C.text3 }}>15 minutes ago</div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.text3, marginTop: 6 }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.text1 }}>System backup completed</div>
-                <div style={{ fontSize: 12, color: C.text3 }}>1 hour ago</div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.primary, marginTop: 6 }} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.text1 }}>Campaign 'Alpha' Launched</div>
-                <div style={{ fontSize: 12, color: C.text3 }}>Yesterday</div>
-              </div>
-            </div>
-
+            ))}
           </div>
         </div>
-
       </div>
-
     </div>
   );
 };
