@@ -1,6 +1,4 @@
-import Dashboard from './Dashboard';
 import { useState, useEffect, useRef, useCallback } from "react";
-
 
 // ═══════════════════════════════════════════════════════════════════════
 // STYLES
@@ -9,32 +7,35 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:'DM Sans',sans-serif;background:#F4F5F7;color:#1A1D26;-webkit-font-smoothing:antialiased}
+html,body{font-family:'DM Sans',sans-serif;background:#F0F2F5;color:#111827;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
 button{font-family:'DM Sans',sans-serif;cursor:pointer}
 input,textarea,select{font-family:'DM Sans',sans-serif}
 input[type=range]{-webkit-appearance:none;height:3px;background:#E5E7EB;border-radius:2px;outline:none;width:100%}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3B82F6;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#111827;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
 textarea{resize:vertical}
 .fi{animation:fi .4s ease both}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sidenav-btn:hover{background:rgba(255,255,255,0.08)!important;color:#fff!important}
 `;
 
 // ═══════════════════════════════════════════════════════════════════════
 // TOKENS — neutral, soft, matching the screenshot
 // ═══════════════════════════════════════════════════════════════════════
 const C = {
-  bg:"#F4F5F7", white:"#FFFFFF", card:"#FFFFFF",
-  border:"#E8EBF0", borderLight:"#F0F2F5",
-  text:"#1A1D26", text2:"#6B7280", text3:"#9CA3AF", textFaint:"#D1D5DB",
-  // Pastel stat card backgrounds (from screenshot)
-  blue:"#DBEAFE", blueDark:"#3B82F6", blueText:"#1E40AF",
-  purple:"#F3E8FF", purpleDark:"#8B5CF6", purpleText:"#6D28D9",
-  amber:"#FEF3C7", amberDark:"#F59E0B", amberText:"#92400E",
-  rose:"#FFE4E6", roseDark:"#F43F5E", roseText:"#9F1239",
-  green:"#D1FAE5", greenDark:"#10B981", greenText:"#065F46",
+  bg:"#F0F2F5", white:"#FFFFFF", card:"#FFFFFF",
+  border:"#E5E7EB", borderLight:"#F3F4F6",
+  text:"#111827", text2:"#6B7280", text3:"#9CA3AF", textFaint:"#D1D5DB",
+  // Sidebar (dark)
+  sidebar:"#111827", sidebarActive:"rgba(255,255,255,0.10)", sidebarText:"#9CA3AF",
+  // Keep blue/etc for badges and accents
+  blue:"#EFF6FF", blueDark:"#1D4ED8", blueText:"#1E40AF",
+  purple:"#F5F3FF", purpleDark:"#7C3AED", purpleText:"#5B21B6",
+  amber:"#FFFBEB", amberDark:"#D97706", amberText:"#92400E",
+  rose:"#FFF1F2", roseDark:"#E11D48", roseText:"#9F1239",
+  green:"#F0FDF4", greenDark:"#16A34A", greenText:"#14532D",
   // Functional
-  accept:"#10B981", reject:"#EF4444", pending:"#F59E0B",
+  accept:"#16A34A", reject:"#DC2626", pending:"#D97706",
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -196,12 +197,13 @@ const Card = ({ children, style, className = "" }) => (
 );
 
 const StatCard = ({ label, value, change, bg }) => (
-  <div style={{ background: bg, borderRadius: 14, padding: "20px 24px", flex: 1, minWidth: 180 }}>
-    <div style={{ fontSize: 13, color: "rgba(0,0,0,.6)", fontWeight: 500, marginBottom: 8 }}>{label}</div>
-    <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-.02em", marginBottom: 6 }}>{value}</div>
+  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 24px", flex: 1, minWidth: 180 }}>
+    <div style={{ fontSize: 12.5, color: C.text2, fontWeight: 500, marginBottom: 8 }}>{label}</div>
+    <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-.025em", marginBottom: 6, color: C.text }}>{value}</div>
     {change !== undefined && (
-      <div style={{ fontSize: 12, fontWeight: 600, color: change > 0 ? C.accept : C.reject }}>
-        {change > 0 ? "↗" : "↘"} {change > 0 ? "+" : ""}{change}% from last period
+      <div style={{ fontSize: 11.5, fontWeight: 600, color: change > 0 ? C.accept : C.reject, display: "flex", alignItems: "center", gap: 4 }}>
+        <span>{change > 0 ? "▲" : "▼"}</span>
+        <span>{Math.abs(change)}% from last period</span>
       </div>
     )}
   </div>
@@ -215,13 +217,13 @@ const Badge = ({ children, color = C.accept }) => {
 const Btn = ({ children, v = "primary", onClick, disabled, sz = "md", style: s }) => {
   const base = { border: "none", borderRadius: 8, fontWeight: 600, cursor: disabled ? "not-allowed" : "pointer", transition: "all .15s", display: "inline-flex", alignItems: "center", gap: 6, opacity: disabled ? .5 : 1 };
   const sizes = { sm: { padding: "5px 11px", fontSize: 11 }, md: { padding: "8px 16px", fontSize: 12 }, lg: { padding: "11px 22px", fontSize: 13 } };
-  const vars = { primary: { background: C.blueDark, color: "#fff" }, secondary: { background: "#F3F4F6", color: C.text, border: `1px solid ${C.border}` }, ghost: { background: "transparent", color: C.text2 }, danger: { background: C.reject, color: "#fff" } };
+  const vars = { primary: { background: C.text, color: "#fff" }, secondary: { background: "#F3F4F6", color: C.text, border: `1px solid ${C.border}` }, ghost: { background: "transparent", color: C.text2 }, danger: { background: C.reject, color: "#fff" } };
   return <button onClick={disabled ? undefined : onClick} style={{ ...base, ...sizes[sz], ...vars[v], ...s }}>{children}</button>;
 };
 
 const Tabs = ({ tabs, active, onChange }) => (
   <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
-    {tabs.map(t => <button key={t} onClick={() => onChange(t)} style={{ padding: "9px 18px", border: "none", background: "transparent", fontSize: 12.5, fontWeight: active === t ? 600 : 400, color: active === t ? C.blueDark : C.text2, borderBottom: active === t ? `2px solid ${C.blueDark}` : "2px solid transparent", cursor: "pointer", transition: "all .12s" }}>{t}</button>)}
+    {tabs.map(t => <button key={t} onClick={() => onChange(t)} style={{ padding: "9px 18px", border: "none", background: "transparent", fontSize: 12.5, fontWeight: active === t ? 600 : 400, color: active === t ? C.text : C.text2, borderBottom: active === t ? `2px solid ${C.text}` : "2px solid transparent", cursor: "pointer", transition: "all .12s" }}>{t}</button>)}
   </div>
 );
 
@@ -377,9 +379,66 @@ function parseCSV(text) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// SMOOTH LINE CHART (matches screenshot style)
+// ═══════════════════════════════════════════════════════════════════════
+const SmoothLineChart = ({ data, h = 200 }) => {
+  if (!data || data.length < 2) return null;
+  const w = 560, padL = 8, padR = 8, padT = 8, padB = 28;
+  const cw = w - padL - padR, ch = h - padT - padB;
+  const mx = Math.max(...data.map(d => Math.max(d.v1, d.v2 || 0)), 1);
+  const px = i => padL + (i / (data.length - 1)) * cw;
+  const py = v => padT + ch - (v / mx) * ch;
+  const curvePath = key => {
+    const pts = data.map((d, i) => [px(i), py(d[key] || 0)]);
+    let p = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i-1][0] + pts[i][0]) / 2;
+      p += ` C ${cpx} ${pts[i-1][1]}, ${cpx} ${pts[i][1]}, ${pts[i][0]} ${pts[i][1]}`;
+    }
+    return p;
+  };
+  const areaPath = key => {
+    const pts = data.map((d, i) => [px(i), py(d[key] || 0)]);
+    let p = `M ${pts[0][0]} ${padT + ch} L ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i-1][0] + pts[i][0]) / 2;
+      p += ` C ${cpx} ${pts[i-1][1]}, ${cpx} ${pts[i][1]}, ${pts[i][0]} ${pts[i][1]}`;
+    }
+    return p + ` L ${pts[pts.length-1][0]} ${padT + ch} Z`;
+  };
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#111827" stopOpacity="0.1"/><stop offset="100%" stopColor="#111827" stopOpacity="0"/></linearGradient>
+        <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#9CA3AF" stopOpacity="0.08"/><stop offset="100%" stopColor="#9CA3AF" stopOpacity="0"/></linearGradient>
+      </defs>
+      {[0,.25,.5,.75,1].map((p,i) => <line key={i} x1={padL} y1={padT+ch*p} x2={padL+cw} y2={padT+ch*p} stroke="#F0F2F5" strokeWidth="1"/>)}
+      <path d={areaPath("v1")} fill="url(#ga)"/>
+      {data[0].v2 !== undefined && <path d={areaPath("v2")} fill="url(#gb)"/>}
+      <path d={curvePath("v1")} fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round"/>
+      {data[0].v2 !== undefined && <path d={curvePath("v2")} fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeDasharray="5,4"/>}
+      {data.map((d, i) => <circle key={i} cx={px(i)} cy={py(d.v1)} r="3.5" fill="#111827" stroke="#fff" strokeWidth="2"/>)}
+      {data.map((d, i) => <text key={i} x={px(i)} y={h - 6} textAnchor="middle" fontSize="10" fill="#9CA3AF" fontFamily="DM Sans, sans-serif">{d.l}</text>)}
+    </svg>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════
+const Dashboard = ({ leads }) => {
+  const [dateRange, setDateRange] = useState("all");
+  const [accOpen, setAccOpen] = useState(false);
+  const [rejOpen, setRejOpen] = useState(false);
 
+  const filtered = dateRange === "all" ? leads : leads.filter(l => {
+    const d = new Date(l.validatedAt);
+    const now = new Date();
+    if (dateRange === "7d") return now - d < 7 * 864e5;
+    if (dateRange === "30d") return now - d < 30 * 864e5;
+    if (dateRange === "90d") return now - d < 90 * 864e5;
+    return true;
+  });
 
   const acc = filtered.filter(l => l.status === "accepted");
   const rej = filtered.filter(l => l.status === "rejected");
@@ -418,42 +477,50 @@ function parseCSV(text) {
 
   return (
     <div className="fi">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.02em" }}>Dashboard</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-.02em", color: C.text }}>Dashboard</h1>
           <p style={{ color: C.text2, marginTop: 2, fontSize: 13 }}>Lead validation overview</p>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {[["7d", "7 Days"], ["30d", "30 Days"], ["90d", "90 Days"], ["all", "All Time"]].map(([k, l]) => (
-            <button key={k} onClick={() => setDateRange(k)} style={{ padding: "5px 12px", border: `1px solid ${dateRange === k ? C.blueDark : C.border}`, borderRadius: 6, background: dateRange === k ? C.blue : "transparent", color: dateRange === k ? C.blueDark : C.text2, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>{l}</button>
+            <button key={k} onClick={() => setDateRange(k)} style={{ padding: "5px 12px", border: `1px solid ${dateRange === k ? C.text : C.border}`, borderRadius: 6, background: dateRange === k ? C.text : "transparent", color: dateRange === k ? "#fff" : C.text2, fontSize: 11, fontWeight: 500, cursor: "pointer", transition: "all .12s" }}>{l}</button>
           ))}
         </div>
       </div>
 
-      {/* Stat Cards — pastel backgrounds with sparklines */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <StatCard label="Validated" value={fmt(filtered.length)} change={2.6} bg={C.blue} />
-        <StatCard label="Accepted" value={`${fmt(acc.length)} (${pct(acc.length, filtered.length)}%)`} change={1.2} bg={C.purple} />
-        <StatCard label="Avg Score" value={avg} change={3.1} bg={C.amber} />
-        <StatCard label="Disputed" value={$(rej.length * 10)} change={-1.4} bg={C.rose} />
+      {/* Stat Cards */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 16 }}>
+        <StatCard label="Validated" value={fmt(filtered.length)} change={2.6} />
+        <StatCard label="Accepted" value={`${fmt(acc.length)} (${pct(acc.length, filtered.length)}%)`} change={1.2} />
+        <StatCard label="Avg Score" value={avg} change={3.1} />
+        <StatCard label="Disputed" value={$(rej.length * 10)} change={-1.4} />
       </div>
 
-      {/* Big Charts Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+      {/* Charts Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, marginBottom: 14 }}>
         <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Validation Trends</div>
-            <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: C.blueDark }} /> Accepted</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#93C5FD" }} /> Rejected</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 12, fontSize: 11, marginRight: 8 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 20, height: 2, background: "#111827", display: "inline-block", borderRadius: 2 }}/> Accepted</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 20, height: 2, background: "#9CA3AF", display: "inline-block", borderRadius: 2, opacity: .5 }}/> Rejected</span>
+              </div>
+              <button style={{ padding: "4px 10px", border: `1px solid ${C.border}`, borderRadius: 6, background: "transparent", fontSize: 11, color: C.text2, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                <I n="download" s={11} c={C.text3}/> Export
+              </button>
+              <button style={{ padding: "4px 10px", border: `1px solid ${C.border}`, borderRadius: 6, background: "transparent", fontSize: 11, color: C.text2, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                <I n="calendar" s={11} c={C.text3}/> Last 14 Days <I n="chev" s={10} c={C.text3}/>
+              </button>
             </div>
           </div>
-          <BarChart data={trendData} h={180} />
+          <SmoothLineChart data={trendData} h={190} />
         </Card>
 
         <Card>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Score Trend Over Time</div>
-          <LineChart data={scoreTrend} h={180} />
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Score Trend Over Time</div>
+          <LineChart data={scoreTrend} h={190} />
         </Card>
       </div>
 
@@ -1113,38 +1180,69 @@ export default function App() {
     <div style={{ display: "flex", minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans',sans-serif" }}>
       <style>{CSS}</style>
 
-      {/* SIDEBAR */}
-      <div style={{ width: 210, background: C.white, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 100 }}>
-        <div style={{ padding: "20px 18px", borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: "-.03em" }}>Aven</div>
-          <div style={{ fontSize: 9.5, color: C.text3, letterSpacing: ".06em", textTransform: "uppercase", marginTop: 1 }}>Verifiable Lead Intelligence</div>
+      {/* DARK SIDEBAR */}
+      <div style={{ width: 220, background: C.sidebar, display: "flex", flexDirection: "column", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 100 }}>
+        {/* Logo */}
+        <div style={{ padding: "22px 18px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-.02em" }}>Aven</div>
+          <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.3)", letterSpacing: ".06em", textTransform: "uppercase", marginTop: 2 }}>Verifiable Lead Intelligence</div>
         </div>
-        <div style={{ flex: 1, padding: "12px 8px" }}>
+        {/* Nav items */}
+        <div style={{ flex: 1, padding: "12px 10px" }}>
           {NAV.map(n => (
-            <button key={n.key} onClick={() => setPage(n.key)} style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 11px",
-              border: "none", borderRadius: 8, fontSize: 12.5, fontWeight: page === n.key ? 600 : 400,
-              background: page === n.key ? C.blue : "transparent",
-              color: page === n.key ? C.blueDark : C.text2, transition: "all .12s", marginBottom: 1,
-            }}><I n={n.icon} s={16} c={page === n.key ? C.blueDark : C.text3} />{n.label}</button>
+            <button key={n.key} className="sidenav-btn" onClick={() => setPage(n.key)} style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
+              border: "none", borderRadius: 8, fontSize: 13, fontWeight: page === n.key ? 500 : 400,
+              background: page === n.key ? C.sidebarActive : "transparent",
+              color: page === n.key ? "#fff" : C.sidebarText,
+              transition: "all .12s", marginBottom: 2, cursor: "pointer",
+            }}>
+              <I n={n.icon} s={16} c={page === n.key ? "#fff" : "rgba(255,255,255,0.35)"} />
+              {n.label}
+            </button>
           ))}
         </div>
-        <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: agentUp ? C.accept : C.reject }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: agentUp ? C.accept : C.reject }}>{agentUp ? "Agent Online" : "Agent Offline"}</span>
+        {/* Agent status */}
+        <div style={{ padding: "14px 18px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: agentUp ? "#4ADE80" : "#F87171", boxShadow: agentUp ? "0 0 6px #4ADE80" : "none" }} />
+            <span style={{ fontSize: 11.5, fontWeight: 500, color: agentUp ? "#4ADE80" : "#F87171" }}>{agentUp ? "Agent Online" : "Agent Offline"}</span>
           </div>
-          <div style={{ fontSize: 10, color: C.text3 }}>{fmt(leads.length)} leads · {AGENT.replace("http://", "")}</div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)" }}>{fmt(leads.length)} leads processed</div>
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div style={{ flex: 1, marginLeft: 210, padding: "24px 28px", minHeight: "100vh" }}>
-        {!agentUp && agentUp !== null && <div style={{ padding: "10px 14px", background: C.rose, borderRadius: 8, fontSize: 12, color: C.roseText, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}><I n="info" s={14} c={C.reject} /> Agent at {AGENT} is not reachable. Start your backend or check the URL.</div>}
-        {page === "dashboard" && <Dashboard leads={leads} />}
-        {page === "validate" && <Validate leads={leads} setLeads={setLeads} />}
-        {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
-        {page === "vendors" && <Vendors leads={leads} />}
+      {/* MAIN AREA */}
+      <div style={{ flex: 1, marginLeft: 220, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+
+        {/* TOP BAR */}
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(240,242,245,0.92)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${C.border}`, padding: "0 32px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+            {NAV.find(n => n.key === page)?.label}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Search */}
+            <div style={{ position: "relative" }}>
+              <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
+                <I n="search" s={14} c={C.text3} />
+              </div>
+              <input placeholder="Search..." style={{ width: 200, padding: "7px 12px 7px 32px", background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12.5, color: C.text, outline: "none" }} />
+            </div>
+            {/* Agent badge */}
+            {!agentUp && agentUp !== null && (
+              <span style={{ fontSize: 11, background: C.rose, color: C.roseText, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>Agent Offline</span>
+            )}
+          </div>
+        </div>
+
+        {/* PAGE CONTENT */}
+        <div style={{ flex: 1, padding: "28px 32px" }}>
+          {!agentUp && agentUp !== null && <div style={{ padding: "10px 14px", background: C.rose, borderRadius: 8, fontSize: 12, color: C.roseText, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}><I n="info" s={14} c={C.reject} /> Agent at {AGENT} is not reachable. Start your backend or check the URL.</div>}
+          {page === "dashboard" && <Dashboard leads={leads} />}
+          {page === "validate" && <Validate leads={leads} setLeads={setLeads} />}
+          {page === "leads" && <AllLeads leads={leads} setLeads={setLeads} setSel={setSel} />}
+          {page === "vendors" && <Vendors leads={leads} />}
+        </div>
       </div>
 
       <LeadDetail lead={sel} onClose={() => setSel(null)} />
