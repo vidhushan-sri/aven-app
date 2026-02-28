@@ -667,7 +667,7 @@ const Validate = ({ leads, setLeads }) => {
           industry: "Technology",
           phone: p.phone || "",
           linkedin: p.linkedin || ""
-      });});
+      }));
 
       const result = await agentBatch(payload);
       clearInterval(iv); setProgress(100);
