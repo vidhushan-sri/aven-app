@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
 import Dashboard from './Dashboard';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -379,19 +379,7 @@ function parseCSV(text) {
 // ═══════════════════════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════
-const Dashboard = ({ leads }) => {
-  const [dateRange, setDateRange] = useState("all");
-  const [accOpen, setAccOpen] = useState(false);
-  const [rejOpen, setRejOpen] = useState(false);
 
-  const filtered = dateRange === "all" ? leads : leads.filter(l => {
-    const d = new Date(l.validatedAt);
-    const now = new Date();
-    if (dateRange === "7d") return now - d < 7 * 864e5;
-    if (dateRange === "30d") return now - d < 30 * 864e5;
-    if (dateRange === "90d") return now - d < 90 * 864e5;
-    return true;
-  });
 
   const acc = filtered.filter(l => l.status === "accepted");
   const rej = filtered.filter(l => l.status === "rejected");
